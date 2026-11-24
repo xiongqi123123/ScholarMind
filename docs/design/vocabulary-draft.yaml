@@ -1,0 +1,98 @@
+# 领域和方向的起步词表（草稿，供修改）
+# - 领域是固定的 5 个，外加"范围外"。
+# - 方向是领域下面的研究方向，粒度是"有一批人专门在做、能叫得出名字的方向"，
+#   比具体方法名粗（具体方法名进关键词），比领域细。
+# - name 是规范名（英文，界面上也显示它），zh 是中文说明，aliases 是会被认作同一个方向的其他写法。
+# - 模型给论文打方向时先在这里选；都不合适才新建，新建的方向会自动加进词表。
+
+computer-vision:
+  zh: 计算机视觉
+  topics:
+    - {name: 3D Gaussian Splatting, zh: 三维高斯泼溅, aliases: [3DGS, Gaussian Splatting]}
+    - {name: Neural Radiance Fields, zh: 神经辐射场与神经渲染, aliases: [NeRF, neural rendering, novel view synthesis]}
+    - {name: 3D Reconstruction, zh: 三维重建（多视图、SfM、MVS）, aliases: [multi-view stereo, structure from motion]}
+    - {name: Stereo Matching, zh: 双目立体匹配, aliases: [stereo depth]}
+    - {name: Monocular Depth Estimation, zh: 单目深度估计, aliases: [metric depth]}
+    - {name: Optical Flow, zh: 光流与场景流, aliases: [scene flow]}
+    - {name: Visual SLAM, zh: 视觉 SLAM 与里程计, aliases: [visual odometry, SLAM]}
+    - {name: Object Detection, zh: 目标检测, aliases: [open-vocabulary detection]}
+    - {name: Segmentation, zh: 分割（语义、实例、全景）, aliases: [semantic segmentation, instance segmentation]}
+    - {name: Tracking, zh: 目标跟踪与点跟踪, aliases: [multi-object tracking, point tracking]}
+    - {name: Pose Estimation, zh: 人体与物体位姿估计, aliases: [6D pose, human pose]}
+    - {name: Point Cloud Understanding, zh: 点云理解, aliases: [3D perception, LiDAR perception]}
+    - {name: Image Generation, zh: 图像生成（扩散、自回归）, aliases: [text-to-image, diffusion models]}
+    - {name: Video Generation, zh: 视频生成, aliases: [text-to-video]}
+    - {name: 3D Generation, zh: 三维内容生成, aliases: [text-to-3D, 4D generation]}
+    - {name: Image and Video Editing, zh: 图像与视频编辑, aliases: [image editing]}
+    - {name: Image Restoration, zh: 图像复原与增强（去噪、超分、去模糊）, aliases: [super-resolution, low-level vision]}
+    - {name: Video Understanding, zh: 视频理解（动作识别、时序定位）, aliases: [action recognition]}
+    - {name: Vision-Language Models, zh: 视觉语言模型, aliases: [VLM, multimodal LLM]}
+    - {name: Visual Representation Learning, zh: 视觉表征学习与视觉基础模型, aliases: [self-supervised learning, vision foundation model]}
+    - {name: Medical Imaging, zh: 医学影像, aliases: []}
+
+natural-language-processing:
+  zh: 自然语言处理
+  topics:
+    - {name: Large Language Models, zh: 大语言模型（架构、预训练）, aliases: [LLM, pretraining]}
+    - {name: LLM Reasoning, zh: 大模型的推理与思维链, aliases: [chain-of-thought, reasoning]}
+    - {name: Retrieval-Augmented Generation, zh: 检索增强生成, aliases: [RAG]}
+    - {name: LLM Agents, zh: 大模型智能体与工具使用, aliases: [agents, tool use, multi-agent]}
+    - {name: LLM Fine-tuning, zh: 微调与适配（LoRA、指令微调）, aliases: [PEFT, instruction tuning]}
+    - {name: Efficient LLM, zh: 大模型的压缩与加速, aliases: [quantization, distillation, efficient inference]}
+    - {name: LLM Evaluation, zh: 大模型评测与基准, aliases: [benchmark]}
+    - {name: LLM Safety and Alignment, zh: 安全、对齐与幻觉, aliases: [hallucination, jailbreak, alignment]}
+    - {name: Interpretability, zh: 可解释性与机理分析, aliases: [mechanistic interpretability]}
+    - {name: Code Generation, zh: 代码生成, aliases: [code LLM]}
+    - {name: Machine Translation, zh: 机器翻译与多语言, aliases: [multilingual]}
+    - {name: Information Extraction, zh: 信息抽取与知识图谱, aliases: [knowledge graph]}
+    - {name: Dialogue Systems, zh: 对话系统, aliases: []}
+    - {name: Speech and Audio, zh: 语音与音频, aliases: [ASR, TTS]}
+
+robotics:
+  zh: 机器人
+  topics:
+    - {name: Manipulation, zh: 操作（抓取、灵巧手、双臂）, aliases: [grasping, dexterous manipulation, bimanual]}
+    - {name: Locomotion, zh: 足式运动控制, aliases: [legged locomotion, quadruped]}
+    - {name: Humanoid Robots, zh: 人形机器人, aliases: [humanoid, whole-body control]}
+    - {name: Navigation, zh: 导航, aliases: [path planning]}
+    - {name: Motion Planning, zh: 运动规划与轨迹优化, aliases: [trajectory optimization, TAMP]}
+    - {name: Robot Learning, zh: 机器人学习（模仿学习、强化学习）, aliases: [imitation learning, reinforcement learning]}
+    - {name: Sim-to-Real, zh: 仿真到真实的迁移, aliases: [sim2real, domain randomization]}
+    - {name: Teleoperation and Data Collection, zh: 遥操作与数据采集, aliases: [teleoperation]}
+    - {name: Tactile Sensing, zh: 触觉感知, aliases: [tactile]}
+    - {name: Robot Perception, zh: 机器人感知与状态估计, aliases: [state estimation]}
+    - {name: Human-Robot Interaction, zh: 人机交互, aliases: [HRI]}
+    - {name: Multi-Robot Systems, zh: 多机器人系统, aliases: [swarm]}
+    - {name: Aerial Robots, zh: 无人机, aliases: [UAV, drone]}
+
+embodied-ai:
+  zh: 具身智能
+  topics:
+    - {name: Vision-Language-Action Models, zh: 视觉语言动作模型, aliases: [VLA]}
+    - {name: Diffusion Policy, zh: 扩散策略与生成式动作模型, aliases: [flow matching policy]}
+    - {name: World Models, zh: 世界模型, aliases: [video world model]}
+    - {name: Embodied Reasoning and Planning, zh: 具身推理与任务规划, aliases: [LLM planner, task planning]}
+    - {name: Vision-Language Navigation, zh: 视觉语言导航, aliases: [VLN, object navigation]}
+    - {name: Mobile Manipulation, zh: 移动操作, aliases: [loco-manipulation]}
+    - {name: Embodied Datasets and Benchmarks, zh: 具身数据集与基准, aliases: [robot dataset]}
+    - {name: Simulation Platforms, zh: 仿真平台与环境, aliases: [simulator]}
+    - {name: Learning from Human Video, zh: 从人类视频学习, aliases: [egocentric video, human demonstration]}
+
+autonomous-driving:
+  zh: 自动驾驶
+  topics:
+    - {name: End-to-End Driving, zh: 端到端自动驾驶, aliases: [E2E driving]}
+    - {name: BEV Perception, zh: 鸟瞰图感知, aliases: [BEV]}
+    - {name: 3D Object Detection, zh: 三维目标检测, aliases: [LiDAR detection]}
+    - {name: Occupancy Prediction, zh: 占用预测, aliases: [occupancy]}
+    - {name: Online Mapping, zh: 在线建图与高精地图, aliases: [HD map, lane detection]}
+    - {name: Motion Prediction, zh: 轨迹预测, aliases: [trajectory prediction]}
+    - {name: Driving Planning, zh: 驾驶规划与决策, aliases: [motion planning for driving]}
+    - {name: Driving World Models, zh: 驾驶世界模型, aliases: []}
+    - {name: Driving Scene Generation, zh: 驾驶场景生成与仿真, aliases: [closed-loop simulation]}
+    - {name: VLM for Driving, zh: 驾驶中的视觉语言模型, aliases: [driving VLA]}
+    - {name: Sensor Fusion, zh: 多传感器融合, aliases: [LiDAR-camera fusion]}
+
+out-of-scope:
+  zh: 范围外（不属于上面五个领域的论文，比如纯理论、推荐系统、图学习）
+  topics: []

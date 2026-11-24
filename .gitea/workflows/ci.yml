@@ -1,0 +1,224 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Deploys a chosen ref without running the checks: for redeploys and rollbacks to commits
+  # that passed CI before.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit to deploy
+        required: true
+        default: main
+
+# A newer push to a pull request cancels the older run. On main (and for manual deploys)
+# every run is its own group, keyed by the commit, so no push ever cancels a main run: Gitea
+# cancels the waiting jobs of the other runs in a group whatever cancel-in-progress says,
+# which with one group for main would cut off deploys waiting for their checks.
+# Deploys are kept one at a time by the deploy job's own group below.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # PyPI indexes tried in turn, mainland China's first (pip has no fallback list: several
+  # --extra-index-url are merged, not tried in order).
+  PIP_INDEXES: https://pypi.tuna.tsinghua.edu.cn/simple https://mirrors.aliyun.com/pypi/simple https://pypi.org/simple
+  # The Node.js the frontend job uses: the one the image builds the frontend with
+  # (node:22-slim on the deploy host), and the SHA-256 of its Linux archives from
+  # https://nodejs.org/dist/v<version>/SHASUMS256.txt: change them together.
+  NODE_VERSION: 22.23.4
+  NODE_SHA256SUMS: |
+    b8492284c76a54baf58d61668dd0e41ee0fc98adabf9503d30f05d08f55b4406  node-v22.23.4-linux-x64.tar.gz
+    f7a1e486dbc8b286847815b477d4fb5e9fb963ed4489c3e1588853d685f589f9  node-v22.23.4-linux-arm64.tar.gz
+
+# The checks run on ubuntu-24.04, not ubuntu-latest: that label's image
+# (docker.gitea.com/runner-images:ubuntu-24.04) ships Ubuntu's Python 3.12 with venv, so
+# nothing is downloaded for Python. ubuntu-latest would move to a newer Ubuntu and Python.
+# Its own Node.js is of unknown version (older images had 18 or 20; the frontend needs
+# ^20.19, ^22.13 or >=24), so the frontend job installs NODE_VERSION.
+jobs:
+  lint:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          python3 -c 'import sys; sys.exit(sys.version_info[:2] != (3, 12) and "python3 is " + sys.version + ", not 3.12: check runs-on")'
+          python3 -m venv .venv
+          echo "$PWD/.venv/bin" >>"$GITHUB_PATH"
+          for index in $PIP_INDEXES; do
+            .venv/bin/pip install --retries 3 --timeout 30 --index-url "$index" -e "backend[dev]" && exit 0
+            echo "pip install from $index failed"
+          done
+          exit 1
+      - name: ruff
+        working-directory: backend
+        run: ruff check .
+      - name: ruff format
+        working-directory: backend
+        run: ruff format --check .
+
+  test:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    # A runner may put jobs and services on one shared network, so the services have names
+    # of their own: plain "postgres" could resolve to another job's database. On a runner that
+    # cannot pull from Docker Hub, service images must be tags its Docker host already has
+    # (docker images), or a new tag hangs the job. No Redis service: the tests do not use it
+    # (conftest sets a dummy REDIS_URL).
+    services:
+      scholarmind-postgres:
+        image: postgres:17.5
+        env:
+          POSTGRES_USER: scholarmind
+          POSTGRES_PASSWORD: scholarmind
+          POSTGRES_DB: scholarmind_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throwaway CI database, not a secret.
+      TEST_DATABASE_URL: postgresql://scholarmind:scholarmind@scholarmind-postgres:5432/scholarmind_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          python3 -c 'import sys; sys.exit(sys.version_info[:2] != (3, 12) and "python3 is " + sys.version + ", not 3.12: check runs-on")'
+          python3 -m venv .venv
+          echo "$PWD/.venv/bin" >>"$GITHUB_PATH"
+          for index in $PIP_INDEXES; do
+            .venv/bin/pip install --retries 3 --timeout 30 --index-url "$index" -e "backend[dev]" && exit 0
+            echo "pip install from $index failed"
+          done
+          exit 1
+      - name: pytest
+        working-directory: backend
+        run: pytest
+      - name: Deploy script tests
+        run: sh deploy/host/test.sh
+      - name: Container entry point tests
+        run: sh deploy/run_test.sh
+      - name: CI toolchain installer tests
+        run: sh .gitea/scripts/toolchain_test.sh
+
+  frontend:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # Node.js as NODE_VERSION says, kept between runs. On a miss toolchain.sh
+      # downloads it from npmmirror or nodejs.org with retries and checks NODE_SHA256SUMS;
+      # the cache is saved at once, whatever the job's outcome.
+      - id: node-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/scholarmind-ci/node-${{ env.NODE_VERSION }}
+          key: toolchain-node-${{ env.NODE_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install Node.js
+        env:
+          SHA256SUMS: ${{ env.NODE_SHA256SUMS }}
+        run: .gitea/scripts/toolchain.sh node "$NODE_VERSION" "$HOME/.cache/scholarmind-ci/node-$NODE_VERSION" >>"$GITHUB_PATH"
+      - if: steps.node-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/scholarmind-ci/node-${{ env.NODE_VERSION }}
+          key: ${{ steps.node-cache.outputs.cache-primary-key }}
+      - name: npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      # npmmirror first, the npm registry as fallback (npm has no fallback list).
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci --registry=https://registry.npmmirror.com || npm ci --registry=https://registry.npmjs.org
+      - name: lint
+        working-directory: frontend
+        run: npm run lint
+      - name: typecheck
+        working-directory: frontend
+        run: npm run typecheck
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+  # Deploys to the Docker host given by the DEPLOY_* secrets after every check passed
+  # (deploy/README.md). Without the secrets, as in forks, it skips its steps and succeeds.
+  deploy:
+    needs: [lint, test, frontend]
+    if: ${{ !cancelled() && !failure() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) }}
+    runs-on: ubuntu-24.04
+    # One deploy at a time: a running one always finishes; a newer one replaces one still
+    # waiting for it, so an older commit is never deployed after a newer one.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    env:
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_COMMAND: ${{ secrets.DEPLOY_COMMAND }}
+    steps:
+      - id: secrets
+        name: Check the deploy secrets
+        run: |
+          if [ -n "$DEPLOY_SSH_KEY" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_KNOWN_HOSTS" ]; then
+            echo "set=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_USER or DEPLOY_KNOWN_HOSTS is not set; nothing to deploy."
+          fi
+      - if: steps.secrets.outputs.set == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      # The host runs deploy/host/scholarmind-deploy.sh: as the forced command of the key, or
+      # by its path in DEPLOY_COMMAND where the key cannot be restricted (deploy/README.md).
+      # It gets the sources as a tar stream and the commit as the version.
+      - if: steps.secrets.outputs.set == 'true'
+        name: Deploy
+        run: |
+          set -eu
+          export LC_ALL=C
+          command -v ssh >/dev/null || { apt-get update -qq && apt-get install -y -qq --no-install-recommends openssh-client; }
+          version=$(git rev-parse --short=12 HEAD)
+          remote="deploy $version"
+          if [ -n "$DEPLOY_COMMAND" ]; then
+            case $DEPLOY_COMMAND in
+            /*) ;;
+            *) echo "DEPLOY_COMMAND must be the absolute path of scholarmind-deploy.sh"; exit 1 ;;
+            esac
+            case $DEPLOY_COMMAND in
+            *[!A-Za-z0-9._/-]*) echo "DEPLOY_COMMAND may only hold letters, digits and . _ / -"; exit 1 ;;
+            esac
+            remote="$DEPLOY_COMMAND $remote"
+          fi
+          echo "deploying $version ($(git rev-parse HEAD))"
+          key=$(mktemp)
+          hosts=$(mktemp)
+          trap 'rm -f "$key" "$hosts"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" >"$key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >"$hosts"
+          # The tree, not the commit: no pax header with the commit ID that some tar
+          # implementations warn about. Exit 75 means another deploy holds the host's lock
+          # (a manual one, say): wait for it and try again, up to 10 times.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            status=0
+            git archive --format=tar "HEAD^{tree}" | ssh -i "$key" -p "${DEPLOY_PORT:-22}" \
+              -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile="$hosts" -o ServerAliveInterval=30 \
+              "$DEPLOY_USER@$DEPLOY_HOST" "$remote" || status=$?
+            [ "$status" -eq 75 ] || exit "$status"
+            echo "another deploy is running on the host; trying again in 30 s ($attempt/10)"
+            sleep 30
+          done
+          echo "the host stayed busy with another deploy"
+          exit 75

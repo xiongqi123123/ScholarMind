@@ -1,0 +1,14 @@
+/Temp
+/.cache/
+.env
+/.claude/worktrees/
+/config.yaml
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+.DS_Store

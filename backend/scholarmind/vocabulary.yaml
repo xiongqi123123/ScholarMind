@@ -1,0 +1,391 @@
+# The built-in starting vocabulary, used when config.yaml has no `vocabulary` section. To change
+# it, copy it under `vocabulary:` there. Revised from docs/design/vocabulary-draft.yaml after a
+# trial on 240 papers: topics that briefs kept creating were added, aliases broad enough to pull
+# in other fields' papers were removed, every topic got a definition.
+# - Domains are fixed (the model never creates one); `out-of-scope` is required and has no topics.
+# - A topic is a research direction a community works on and can name: coarser than a method
+#   (method names go into keywords), finer than a domain.
+# - name is the canonical English name (shown in the interface), zh a Chinese description,
+#   aliases other spellings that count as the same topic (keep them specific: an alias claims
+#   that wording for this topic everywhere), definition one English sentence the model reads to
+#   decide between neighbouring topics.
+# - `scholarmind topics sync` (and every brief batch) adds new topics to the database and
+#   updates changed ones, never deletes. To rename a topic, list the old name among its aliases.
+# - Briefs pick topics from here and may create new ones (marked as created), which a weekly
+#   review merges into existing topics when they turn out to be duplicates.
+
+computer-vision:
+  zh: 计算机视觉
+  topics:
+    - name: 3D Gaussian Splatting
+      zh: 三维高斯泼溅
+      aliases: [3DGS, Gaussian Splatting]
+      definition: Representing and rendering scenes with explicit 3D Gaussian primitives, including their optimization, compression, dynamic and feed-forward variants.
+    - name: Neural Radiance Fields
+      zh: 神经辐射场与神经渲染
+      aliases: [NeRF, neural rendering]
+      definition: Implicit neural scene representations rendered by volume rendering (NeRF and successors); explicit Gaussian primitives are 3D Gaussian Splatting.
+    - name: 3D Reconstruction
+      zh: 三维重建（多视图、SfM、MVS）
+      aliases: [multi-view stereo, structure from motion]
+      definition: Recovering 3D geometry and camera poses from images (SfM, MVS, feed-forward multi-view and surface reconstruction); real-time tracking with mapping is Visual SLAM.
+    - name: Stereo Matching
+      zh: 双目立体匹配
+      aliases: [stereo depth]
+      definition: Estimating disparity or depth from stereo image pairs.
+    - name: Monocular Depth Estimation
+      zh: 单目深度估计
+      aliases: [metric depth]
+      definition: Predicting relative or metric depth from a single image or monocular video.
+    - name: Optical Flow
+      zh: 光流与场景流
+      aliases: [scene flow]
+      definition: Estimating dense 2D motion between frames, or the 3D motion of points (scene flow).
+    - name: Visual SLAM
+      zh: 视觉 SLAM 与里程计
+      aliases: [visual odometry, SLAM]
+      definition: Tracking the sensor pose while building a map in real time from cameras, possibly with inertial, depth or LiDAR input, including odometry.
+    - name: Object Detection
+      zh: 目标检测
+      aliases: [open-vocabulary detection]
+      definition: Localizing and classifying objects with 2D boxes in images or video, including open-vocabulary detection; 3D boxes from LiDAR or multi-camera input are 3D Object Detection.
+    - name: Segmentation
+      zh: 分割（语义、实例、全景）
+      aliases: [semantic segmentation, instance segmentation, panoptic segmentation]
+      definition: Pixel-level labelling of images or video, whether semantic, instance, panoptic, open-vocabulary or promptable.
+    - name: Tracking
+      zh: 目标跟踪与点跟踪
+      aliases: [multi-object tracking, point tracking]
+      definition: Following objects or points through video, whether single objects, many objects or arbitrary points.
+    - name: Pose Estimation
+      zh: 人体、手与物体位姿估计
+      aliases: [6D pose, human pose, hand pose, hand-object interaction]
+      definition: Estimating the 2D or 3D pose and shape of human bodies and hands (including hand-object interaction), or the 6D pose of objects, from images or video.
+    - name: Point Cloud Understanding
+      zh: 点云理解
+      aliases: [point cloud registration, point cloud completion]
+      definition: Learning on 3D point clouds for classification, segmentation, registration and completion; 3D boxes for driving are 3D Object Detection.
+    - name: Image Generation
+      zh: 图像生成（扩散、自回归）
+      aliases: [text-to-image]
+      definition: Generating images from text or other conditions with diffusion, flow-matching or autoregressive models, including the models' architecture, sampling and speed; changing an existing image is Image and Video Editing.
+    - name: Video Generation
+      zh: 视频生成
+      aliases: [text-to-video]
+      definition: Generating video from text, images or other conditions; a video model that predicts the outcome of an agent's actions is World Models (Driving World Models for road driving).
+    - name: 3D Generation
+      zh: 三维内容生成
+      aliases: [text-to-3D, 4D generation]
+      definition: Generating 3D assets, scenes or dynamic 4D content.
+    - name: Image and Video Editing
+      zh: 图像与视频编辑
+      aliases: [image editing, video editing]
+      definition: Modifying existing images or video by instructions, masks or references, such as inpainting, style transfer and subject-driven editing.
+    - name: Image Restoration
+      zh: 图像复原与增强（去噪、超分、去模糊）
+      aliases: [super-resolution, low-level vision]
+      definition: Recovering clean images or video from degraded input, such as denoising, deblurring, super-resolution and low-light enhancement.
+    - name: Video Understanding
+      zh: 视频理解（动作识别、时序定位）
+      aliases: [action recognition, temporal action localization]
+      definition: Recognizing and localizing actions and events in video, temporal grounding and long-video understanding; answering questions about video with a multimodal LLM is Vision-Language Models.
+    - name: Vision-Language Models
+      zh: 视觉语言模型
+      aliases: [VLM, multimodal LLM]
+      definition: Models that jointly process images or video and language (multimodal LLMs, CLIP-style pretraining) and their training, alignment, hallucination and evaluation; a paper that only uses a VLM as a component for another task takes that task's topic instead.
+    - name: Visual Representation Learning
+      zh: 视觉表征学习与视觉基础模型
+      aliases: [vision foundation model, visual pretraining]
+      definition: Learning general-purpose visual features, through self-supervised or contrastive pretraining, vision backbones and foundation models, or feature distillation.
+    - name: Medical Imaging
+      zh: 医学影像（应用场景）
+      aliases: [medical image analysis]
+      definition: An application area, not a technique; any vision method whose main evaluation is on medical images (radiology, pathology, endoscopy), used together with the technique's topic when one fits.
+    - name: Remote Sensing
+      zh: 遥感（应用场景）
+      aliases: [satellite imagery, aerial imagery, hyperspectral imaging]
+      definition: An application area; vision on satellite, aerial and other overhead or hyperspectral imagery, such as scene classification, detection, change detection and unmixing.
+    - name: Continual Learning
+      zh: 持续学习
+      aliases: [incremental learning, lifelong learning, class-incremental learning]
+      definition: Learning from a sequence of tasks or a non-stationary data stream without forgetting earlier knowledge, in class-, domain- or task-incremental settings.
+    - name: Domain Adaptation
+      zh: 域适应与域泛化
+      aliases: [domain generalization, test-time adaptation, unsupervised domain adaptation]
+      definition: Keeping models accurate under distribution shift between training and deployment, through unsupervised domain adaptation, domain generalization or test-time adaptation.
+    - name: Anomaly Detection
+      zh: 异常检测
+      aliases: [industrial anomaly detection, defect detection]
+      definition: Detecting and localizing anomalous samples or regions in images, video or 3D data, such as industrial defects, usually with few or no anomalous training examples.
+    - name: Image Quality Assessment
+      zh: 图像与视频质量评价
+      aliases: [IQA, video quality assessment]
+      definition: Predicting the human-perceived quality of images or video, with or without a reference.
+    - name: Media Forensics and Watermarking
+      zh: AIGC 检测、伪造检测与水印
+      aliases: [deepfake detection, AI-generated image detection, AI-generated video detection, image forgery detection, watermarking]
+      definition: Telling real from generated or manipulated images and video (deepfake, AIGC and forgery detection) and embedding or verifying watermarks for provenance.
+    - name: Adversarial Robustness and Backdoors
+      zh: 对抗鲁棒性与后门安全
+      aliases: [adversarial attacks, adversarial examples, backdoor attacks, data poisoning]
+      definition: Attacks on and defences of vision, multimodal and embodied models, such as adversarial examples and patches, backdoors and data poisoning, and certified robustness; jailbreaking language models is LLM Safety and Alignment.
+    - name: Event-based Vision
+      zh: 事件相机视觉
+      aliases: [event camera, neuromorphic vision]
+      definition: Perception with asynchronous event cameras, including event representations, reconstruction, flow, detection and tracking.
+    - name: Human Motion Generation
+      zh: 人体运动生成与角色动画
+      aliases: [motion synthesis, text-to-motion, character animation, gesture generation]
+      definition: Generating human or character body motion from text, audio, music or control signals, including physics-based character animation and co-speech gestures; estimating motion from video is Pose Estimation.
+    - name: Image Compression
+      zh: 图像与视频压缩
+      aliases: [learned image compression, video compression, neural codec]
+      definition: Learned compression of images, video and other visual data, rate-distortion optimization and neural codecs.
+    - name: Place Recognition and Retrieval
+      zh: 视觉场景识别与图像检索
+      aliases: [visual place recognition, image retrieval, visual geo-localization]
+      definition: Finding images of the same place or object in a database, as in visual place recognition, instance-level retrieval and cross-view geo-localization; text-to-image retrieval is Vision-Language Models.
+    - name: Brain Decoding
+      zh: 脑信号解码
+      aliases: [neural decoding, EEG decoding, fMRI decoding]
+      definition: Reconstructing or describing perceived or imagined images, video or text from brain signals (EEG, MEG, fMRI) with learned models.
+    - name: Image Fusion
+      zh: 多模态图像融合
+      aliases: [infrared-visible fusion, multi-modal image fusion]
+      definition: Fusing images from different sensors or settings (infrared and visible, multi-exposure, multi-focus) into one more informative image.
+    - name: Virtual Try-On
+      zh: 虚拟试衣
+      aliases: [VTON]
+      definition: Synthesizing images or video of a person wearing a given garment while keeping identity, pose and garment detail.
+
+natural-language-processing:
+  zh: 自然语言处理
+  topics:
+    - name: Large Language Models
+      zh: 大语言模型（架构、预训练）
+      aliases: [LLM, LLM pretraining]
+      definition: Architecture, pretraining, scaling, data and tokenization of large language models; specific capabilities (reasoning, agents, alignment, efficiency) have their own topics.
+    - name: LLM Reasoning
+      zh: 大模型的推理与思维链
+      aliases: [chain-of-thought]
+      definition: Improving or analysing multi-step reasoning of language models (chain-of-thought, reinforcement learning for reasoning, test-time scaling); reasoning of embodied agents is Embodied Reasoning and Planning.
+    - name: Retrieval-Augmented Generation
+      zh: 检索增强生成
+      aliases: [RAG]
+      definition: Grounding language model output on retrieved documents or knowledge, including retrievers and memory.
+    - name: LLM Agents
+      zh: 大模型智能体与工具使用
+      aliases: [tool use, LLM multi-agent systems, GUI agents]
+      definition: Language-model agents that plan and act with tools, code, browsers or graphical interfaces, and multi-agent LLM systems; agents that control robots are Embodied Reasoning and Planning.
+    - name: LLM Fine-tuning
+      zh: 微调与适配（LoRA、指令微调）
+      aliases: [PEFT, instruction tuning]
+      definition: Adapting pretrained language models, through instruction tuning or parameter-efficient fine-tuning such as LoRA and adapters.
+    - name: Efficient LLM
+      zh: 大模型的压缩与加速
+      aliases: [LLM quantization, LLM compression]
+      definition: Making large language or multimodal models cheaper to run or train, through quantization, pruning, distillation, KV-cache and attention efficiency, or speculative decoding.
+    - name: LLM Evaluation
+      zh: 大模型评测与基准
+      aliases: [LLM benchmark]
+      definition: Benchmarks and methodology for evaluating language models; benchmarks of another area take that area's topic.
+    - name: LLM Safety and Alignment
+      zh: 安全、对齐与幻觉
+      aliases: [jailbreak, RLHF, LLM hallucination]
+      definition: Aligning language models with human preferences (RLHF, DPO) and their safety, such as jailbreaks, harmful content, hallucination and privacy.
+    - name: Interpretability
+      zh: 可解释性与机理分析
+      aliases: [mechanistic interpretability, explainable AI]
+      definition: Explaining what models compute, through mechanistic interpretability, probing and attribution, for language, vision or other models.
+    - name: Code Generation
+      zh: 代码生成
+      aliases: [code LLM]
+      definition: Language models that write, repair or reason about program code.
+    - name: Machine Translation
+      zh: 机器翻译与多语言
+      aliases: [multilingual NLP]
+      definition: Translating between languages and building language technology for many languages.
+    - name: Information Extraction
+      zh: 信息抽取与知识图谱
+      aliases: [knowledge graph, named entity recognition]
+      definition: Extracting entities, relations and events from text, and building or using knowledge graphs.
+    - name: Dialogue Systems
+      zh: 对话系统
+      aliases: [conversational AI]
+      definition: Multi-turn conversational systems, task-oriented dialogue and user simulation.
+    - name: Speech and Audio
+      zh: 语音与音频
+      aliases: [ASR, TTS, speech recognition, speech synthesis]
+      definition: Speech recognition and synthesis, spoken language models, and audio understanding or generation (music, sound events).
+
+robotics:
+  zh: 机器人
+  topics:
+    - name: Manipulation
+      zh: 操作（抓取、灵巧手、双臂）
+      aliases: [grasping, dexterous manipulation, bimanual manipulation]
+      definition: Robots acting on objects, through grasping, dexterous in-hand and bimanual manipulation and contact-rich tasks; deformable objects have their own topic.
+    - name: Locomotion
+      zh: 足式运动控制
+      aliases: [legged locomotion, quadruped]
+      definition: Controllers that make legged robots walk, run and cross terrain; whole-body humanoid behaviours are Humanoid Robots.
+    - name: Humanoid Robots
+      zh: 人形机器人
+      aliases: [humanoid, whole-body control]
+      definition: Humanoid robots, including whole-body control, motion retargeting and imitation from human data, and their hardware.
+    - name: Navigation
+      zh: 导航
+      aliases: [path planning]
+      definition: Robots reaching goals through an environment with maps or sensors, through path planning, exploration and obstacle avoidance; goals given in language or as objects to find are Vision-Language Navigation.
+    - name: Motion Planning
+      zh: 运动规划与轨迹优化
+      aliases: [trajectory optimization, TAMP, task and motion planning]
+      definition: Computing feasible, collision-free motions for manipulators and mobile robots (sampling- and optimization-based planning, MPC, task and motion planning); planning for road vehicles is Driving Planning.
+    - name: Robot Learning
+      zh: 机器人学习（模仿学习、强化学习）
+      aliases: [imitation learning, robot reinforcement learning, learning from demonstration]
+      definition: Learning robot control from data (imitation, reinforcement and offline learning) when the policy is neither a VLA nor a diffusion or flow policy; RL algorithms evaluated without any robot or embodied task are out of scope.
+    - name: Sim-to-Real
+      zh: 仿真到真实的迁移
+      aliases: [sim2real, domain randomization]
+      definition: Transferring policies or perception trained in simulation to real robots, including real-to-sim reconstruction for training.
+    - name: Teleoperation and Data Collection
+      zh: 遥操作与数据采集
+      aliases: [teleoperation]
+      definition: Interfaces and systems for teleoperating robots and collecting robot demonstration data.
+    - name: Tactile Sensing
+      zh: 触觉感知
+      aliases: [tactile]
+      definition: Tactile sensors, their simulation, and touch-based perception and control.
+    - name: Robot Perception
+      zh: 机器人感知与状态估计
+      aliases: [state estimation]
+      definition: Perception for robot operation, such as state estimation, sensor calibration and scene understanding for manipulation; mapping while localizing is Visual SLAM.
+    - name: Human-Robot Interaction
+      zh: 人机交互
+      aliases: [HRI]
+      definition: Robots working with or around people, covering interaction, communication, shared autonomy and human factors.
+    - name: Multi-Robot Systems
+      zh: 多机器人系统
+      aliases: [swarm robotics, multi-robot coordination]
+      definition: Coordinating teams or swarms of robots for planning, task allocation and exploration.
+    - name: Aerial Robots
+      zh: 无人机
+      aliases: [UAV, drone, quadrotor]
+      definition: Flying robots and the control, planning, perception and design of drones.
+    - name: Underwater Robots
+      zh: 水下机器人
+      aliases: [AUV, underwater vehicle, marine robotics]
+      definition: Underwater and marine robots, including vehicle modelling, control, navigation and perception.
+    - name: Soft Robotics
+      zh: 软体机器人
+      aliases: [soft robots, continuum robots]
+      definition: Robots built from compliant materials or continuum structures, covering their design, actuation, modelling and control.
+    - name: Robot Hardware Design
+      zh: 机器人硬件与形态设计
+      aliases: [actuator design, robot morphology design, mechanism design]
+      definition: Designing robot bodies, such as actuators and transmissions, mechanisms, grippers and hands, and morphology optimization or co-design.
+    - name: Medical and Surgical Robots
+      zh: 医疗与手术机器人（含外骨骼）
+      aliases: [surgical robotics, medical robotics, rehabilitation robots, exoskeleton]
+      definition: Robots for surgery, interventions, rehabilitation and assistance, including wearable exoskeletons and prostheses.
+    - name: Safety-Critical Control
+      zh: 安全控制（控制屏障函数、可达性）
+      aliases: [control barrier functions, reachability analysis, safety filters]
+      definition: Control with formal safety guarantees, through control barrier functions, reachability analysis, safety filters and shielding, for robots and vehicles.
+    - name: Deformable Object Manipulation
+      zh: 可变形物体操作
+      aliases: [cloth manipulation, rope manipulation]
+      definition: Perceiving, modelling and manipulating deformable objects such as cloth, ropes, cables and food.
+
+embodied-ai:
+  zh: 具身智能
+  topics:
+    - name: Vision-Language-Action Models
+      zh: 视觉语言动作模型
+      aliases: [VLA]
+      definition: Robot policies built on pretrained vision-language or video models that map observations and instructions to actions, with their training, action representation, reasoning and efficiency; policies without such a backbone are Robot Learning or Diffusion Policy.
+    - name: Diffusion Policy
+      zh: 扩散策略与生成式动作模型
+      aliases: [flow matching policy]
+      definition: Policies that generate actions with diffusion or flow-matching models, without a pretrained vision-language backbone (with one it is a VLA).
+    - name: World Models
+      zh: 世界模型
+      aliases: [video world model]
+      definition: Learned models that predict how an environment evolves under an agent's actions, used for planning, policy learning or evaluation; video generation without actions is Video Generation, and world models for road driving are Driving World Models.
+    - name: Embodied Reasoning and Planning
+      zh: 具身推理与任务规划
+      aliases: [LLM planner, task planning]
+      definition: High-level reasoning and task planning for embodied agents with LLMs or VLMs, such as instruction decomposition, spatial reasoning, long-horizon planning and failure recovery.
+    - name: Vision-Language Navigation
+      zh: 视觉语言导航
+      aliases: [VLN, object navigation, object-goal navigation]
+      definition: Embodied agents navigating by language instructions or semantic goals (objects, images), usually with learned or VLM-based policies; map-based navigation to coordinates is Navigation.
+    - name: Mobile Manipulation
+      zh: 移动操作
+      aliases: [loco-manipulation]
+      definition: Robots that both move and manipulate, such as mobile manipulators and legged or humanoid loco-manipulation in homes.
+    - name: Embodied Datasets and Benchmarks
+      zh: 具身数据集与基准
+      aliases: [robot dataset, robot benchmark]
+      definition: Datasets and benchmarks built to train or evaluate robots and embodied agents.
+    - name: Simulation Platforms
+      zh: 仿真平台与环境
+      aliases: [simulator, robot simulation]
+      definition: Simulators, environments and asset generation for training and testing embodied agents.
+    - name: Learning from Human Video
+      zh: 从人类视频学习
+      aliases: [egocentric video, human demonstration video]
+      definition: Learning robot skills or representations from videos of humans, including egocentric video and hand-object interaction data.
+
+autonomous-driving:
+  zh: 自动驾驶
+  topics:
+    - name: End-to-End Driving
+      zh: 端到端自动驾驶
+      aliases: [E2E driving]
+      definition: Driving models that map sensor input to trajectories or controls in one network trained jointly.
+    - name: BEV Perception
+      zh: 鸟瞰图感知
+      aliases: [BEV]
+      definition: Building bird's-eye-view representations from multi-camera and other sensors for driving perception.
+    - name: 3D Object Detection
+      zh: 三维目标检测
+      aliases: [LiDAR detection]
+      definition: Detecting objects with 3D boxes from LiDAR, multi-camera or radar input, mainly for driving; 2D boxes are Object Detection, other point cloud tasks Point Cloud Understanding.
+    - name: Occupancy Prediction
+      zh: 占用预测
+      aliases: [occupancy, 3D occupancy]
+      definition: Predicting dense 3D occupancy and semantics of the space around the vehicle.
+    - name: Online Mapping
+      zh: 在线建图与高精地图
+      aliases: [HD map, lane detection]
+      definition: Building vectorized or HD maps and detecting lanes online from vehicle sensors.
+    - name: Motion Prediction
+      zh: 轨迹预测
+      aliases: [trajectory prediction]
+      definition: Forecasting the future trajectories of vehicles, pedestrians and other traffic agents.
+    - name: Driving Planning
+      zh: 驾驶规划与决策
+      aliases: [motion planning for driving, driving decision making]
+      definition: Planning and decision making for the ego vehicle as its own module; planning for robot arms and mobile robots is Motion Planning, joint sensor-to-plan models are End-to-End Driving.
+    - name: Driving World Models
+      zh: 驾驶世界模型
+      aliases: []
+      definition: World models for road driving that predict future scenes or occupancy given the ego vehicle's actions, for planning, simulation or data generation.
+    - name: Driving Scene Generation
+      zh: 驾驶场景生成与仿真
+      aliases: [closed-loop simulation, driving simulation]
+      definition: Generating or reconstructing driving scenes and sensor data for simulation and testing, including closed-loop simulators; prediction conditioned on ego actions for planning is Driving World Models.
+    - name: VLM for Driving
+      zh: 驾驶中的视觉语言模型
+      aliases: [driving VLA, driving VLM]
+      definition: Vision-language models and VLAs applied to driving, covering scene understanding, reasoning, question answering and language-guided planning.
+    - name: Sensor Fusion
+      zh: 多传感器融合
+      aliases: [LiDAR-camera fusion, radar-camera fusion]
+      definition: Fusing camera, LiDAR, radar and other sensors for driving perception.
+
+out-of-scope:
+  zh: 范围外（主要贡献不在上面五个领域，比如生物、物理、软件工程、通用机器学习理论与算法、推荐系统、图学习、硬件平台）
+  topics: []

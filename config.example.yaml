@@ -1,0 +1,64 @@
+arxiv:
+  # arXiv categories to sync every day (https://arxiv.org/category_taxonomy).
+  categories:
+    - cs.CV
+    - cs.RO
+
+sync:
+  # When the daily sync is enqueued, in the local time zone of the `scholarmind cron`
+  # process (set TZ). arXiv publishes new metadata around 22:30 US Eastern, Sunday-Thursday.
+  cron: "30 12 * * *"
+  # Weekly check for new conference editions, same time zone: once a venue has an edition in
+  # the library, its next one is imported when the proceedings appear, and the latest again
+  # for six weeks after. A venue's first edition is imported by hand (import-venue below).
+  venues_cron: "0 4 * * 1"
+
+# Conferences (main-conference papers only). Built in: NeurIPS, ICML, ICLR, ICRA, IROS, RSS,
+# ECCV, ICCV, CVPR, ACL, AAAI, EMNLP and ACM MM, with their sources (VENUES in
+# backend/scholarmind/config.py). Entries here change fields of a built-in venue, add one, or
+# drop one with null. By hand: `scholarmind import-venue CVPR 2026` imports one edition,
+# `scholarmind import-venues --since 2022` queues every venue's editions since 2022, newest
+# first, one after another. With --no-briefs their papers are held out of briefs until
+# `scholarmind release-held`.
+# venues:
+#   ICML: null
+#   ACM MM:
+#     min_pages: 8  # shorter papers are demos, symposium papers and the like
+#   CoRL:
+#     adapter: pmlr  # openalex, cvf, proceedings or pmlr
+#     title: "Proceedings of CoRL {year}"
+#     min_papers: 100  # fewer listed fails the import: the site has probably changed
+
+# Domains and their starting research topics. Left out, the built-in vocabulary is used
+# (backend/scholarmind/vocabulary.yaml: computer vision, NLP, robotics, embodied AI, autonomous
+# driving, 68 topics). To change it, copy that file's content here under `vocabulary:`.
+# Briefs give every paper 1-2 domains (or out-of-scope) and 1-3 topics, and create a topic when
+# none fits; a weekly review merges created topics that duplicate another one.
+# vocabulary:
+#   computer-vision:
+#     zh: 计算机视觉
+#     topics:
+#       - {name: 3D Gaussian Splatting, zh: 三维高斯泼溅, aliases: [3DGS, Gaussian Splatting]}
+#   out-of-scope:
+#     zh: 范围外
+#     topics: []
+
+analysis:
+  # OpenAI-compatible model endpoint, called through pi. The key comes from LLM_API_KEY.
+  base_url: https://api.example.com/v1
+  brief_model: glm-5.3-flash
+  brief_batch_size: 20  # abstracts per model call
+  # Full reports (论文解读): the whole paper in one call, 25k-63k tokens. Defaults to brief_model.
+  report_model: glm-5.3-flash
+  report_daily_limit: 10  # automatic reports per day (local time); manual ones do not count
+  # A paper whose brief gives it any of these gets a full report automatically (domains from
+  # the vocabulary; topics by name or alias; keywords compared ignoring case). Empty: none.
+  report_auto:
+    domains: []
+    topics: []
+    keywords: []
+  # Language of brief summaries (tag values stay the English vocabulary above). Reports are
+  # written in Chinese, as their prompt (prompts/report.v2.md) is.
+  language: Simplified Chinese
+  # When the weekly review of created topics is enqueued (cron, local time like sync.cron).
+  topic_review_cron: "0 13 * * 1"

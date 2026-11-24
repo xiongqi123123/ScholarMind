@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>2026-11-22T12:12:40Z</responseDate>
+                <request verb="ListRecords" metadataPrefix="arXivRaw" from="2026-11-19" set="cs:cs:RO">http://oaipmh.arxiv.org/oai</request>
+
+
+    <ListRecords>
+                    <record>
+                <header>
+        <identifier>oai:arXiv.org:2507.06174</identifier>
+        <datestamp>2026-11-19</datestamp>
+            <setSpec>cs:cs:RO</setSpec>
+            <setSpec>cs:cs:AI</setSpec>
+            <setSpec>cs:cs:SY</setSpec>
+            <setSpec>eess:eess:SY</setSpec>
+    </header>
+
+            <metadata>
+                        <arXivRaw xmlns="http://arxiv.org/OAI/arXivRaw/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXivRaw/ https://oaipmh.arxiv.org/OAI/arXivRaw.xsd">
+        <id>2507.06174</id>
+        <submitter>Koki Yamane</submitter>
+            <version version="v1">
+                <date>Tue, 08 Jul 2025 16:54:34 GMT</date>
+                <size>16600kb</size>
+            </version>
+            <version version="v2">
+                <date>Mon, 14 Jul 2025 16:53:31 GMT</date>
+                <size>16657kb</size>
+            </version>
+            <version version="v3">
+                <date>Thu, 17 Jul 2025 16:43:46 GMT</date>
+                <size>16665kb</size>
+            </version>
+            <version version="v4">
+                <date>Sat, 19 Jul 2025 00:20:11 GMT</date>
+                <size>16835kb</size>
+            </version>
+            <version version="v5">
+                <date>Thu, 24 Jul 2025 00:40:26 GMT</date>
+                <size>16835kb</size>
+            </version>
+            <version version="v6">
+                <date>Wed, 04 Mar 2026 19:26:45 GMT</date>
+                <size>21658kb</size>
+            </version>
+            <version version="v7">
+                <date>Fri, 12 Jun 2026 08:10:43 GMT</date>
+                <size>15616kb</size>
+            </version>
+            <version version="v8">
+                <date>Wed, 18 Nov 2026 13:22:37 GMT</date>
+                <size>15583kb</size>
+            </version>
+        <title>Design and Experimental Validation of Sensorless 4-Channel Bilateral Teleoperation for Low-Cost Manipulators</title>
+        <authors>Koki Yamane, Yunhan Li, Masashi Konosu, Koki Inami, Junji Oaki, Toshiaki Tsuji, Sho Sakaino</authors>
+        <categories>cs.RO cs.AI cs.SY eess.SY</categories>
+            <comments>22 pages, 12 figures. Published in IEEE Access</comments>
+            <journal-ref>IEEE Access, vol. 14, pp. 109407-109428, 2026</journal-ref>
+            <doi>10.1109/ACCESS.2026.3713604</doi>
+            <license>http://arxiv.org/licenses/nonexclusive-distrib/1.0/</license>
+            <abstract>Teleoperation of low-cost manipulators is attracting increasing attention as a practical means of collecting demonstration data for imitation learning. However, most existing low-cost systems rely on unilateral position control without force feedback, while implementing force-feedback bilateral teleoperation is difficult because low-cost manipulators typically have low-resolution encoders and no joint torque sensors. This paper presents a sensorless 4-channel bilateral teleoperation framework that integrates identified nonlinear dynamics compensation with a disturbance-observer-based velocity and external-force estimation scheme. By interpreting the observer structure in the frequency domain, we clarify the coupling between the velocity- and external-force-estimation bandwidths and derive practical tuning guidelines based on the damping ratio and a single cutoff frequency. Real-robot experiments, including force-sensor comparison and teleoperation tasks, demonstrate that the proposed framework provides practically useful force estimates and enables stable teleoperation in high-speed and contact-rich scenarios under low-cost hardware constraints. As an application, imitation-learning experiments demonstrate that incorporating estimated force information into demonstrations improves task success rates in the tested contact-rich manipulation tasks.</abstract>
+    </arXivRaw>
+
+            </metadata>
+        </record>
+<record>
+                <header>
+        <identifier>oai:arXiv.org:2605.04939</identifier>
+        <datestamp>2026-11-19</datestamp>
+            <setSpec>cs:cs:RO</setSpec>
+            <setSpec>cs:cs:AI</setSpec>
+    </header>
+
+            <metadata>
+                        <arXivRaw xmlns="http://arxiv.org/OAI/arXivRaw/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXivRaw/ https://oaipmh.arxiv.org/OAI/arXivRaw.xsd">
+        <id>2605.04939</id>
+        <submitter>Erel Shtossel</submitter>
+            <version version="v1">
+                <date>Wed, 06 May 2026 14:05:36 GMT</date>
+                <size>411kb</size>
+            </version>
+        <title>Modular Reinforcement Learning For Cooperative Swarms</title>
+        <authors>Erel Shtossel, Gal A. Kaminka</authors>
+        <categories>cs.RO cs.AI</categories>
+            <journal-ref>https://arms2026.di.unimi.it/#home</journal-ref>
+            <license>http://creativecommons.org/licenses/by/4.0/</license>
+            <abstract>A cooperative robot swarm is a collective of computationally-limited robots that share a common goal. Each robot can only interact with a small subset of its peers, without knowing how this affects the collective utility. Recent advances in distributed multi-agent reinforcement learning have demonstrated that it is possible for robots to learn how to interact effectively with others, in a manner that is aligned with the common goal, despite each robot learning independently of others. However, this requires each robot to represent a potentially combinatorial number of interaction states, challenging the memory capabilities of the robots. This paper proposes an alternative approach for representing spatial interaction states for multi-robot reinforcement learning in swarms. A modular (decomposed) representation is used, where each feature of the state is handled by a separate learning procedure, and the results aggregated. We demonstrate the efficacy of the approach in numerous experiments with simulated robot swarms carrying out foraging.</abstract>
+    </arXivRaw>
+
+            </metadata>
+        </record>
+<record>
+                <header>
+        <identifier>oai:arXiv.org:2611.23364</identifier>
+        <datestamp>2026-11-19</datestamp>
+            <setSpec>q-bio:q-bio:NC</setSpec>
+            <setSpec>cs:cs:AI</setSpec>
+            <setSpec>cs:cs:LG</setSpec>
+            <setSpec>cs:cs:NE</setSpec>
+            <setSpec>cs:cs:RO</setSpec>
+    </header>
+
+            <metadata>
+                        <arXivRaw xmlns="http://arxiv.org/OAI/arXivRaw/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXivRaw/ https://oaipmh.arxiv.org/OAI/arXivRaw.xsd">
+        <id>2611.23364</id>
+        <submitter>Nikhil Bhattasali</submitter>
+            <version version="v1">
+                <date>Tue, 17 Nov 2026 18:57:31 GMT</date>
+                <size>7516kb</size>
+            </version>
+        <title>Neural Circuit Architectural Priors for Rat Locomotion</title>
+        <authors>Nikhil X. Bhattasali, Jaron Cui, Lerrel Pinto, Grace W. Lindsay</authors>
+        <categories>q-bio.NC cs.AI cs.LG cs.NE cs.RO</categories>
+            <comments>NeurIPS 2026. 10 pages main text, 41 pages total, 7 figures in main text. Code and videos: https://rat-ncap.github.io/</comments>
+            <license>http://creativecommons.org/licenses/by/4.0/</license>
+            <abstract>Animals generate behavior through continuous interactions between their neural circuits, bodies, and environment. Embodied simulations study these interactions by testing neural circuit models in biologically realistic settings. Recent efforts have simulated diverse animals, and emerging work on biologically grounded neural architectures has begun to integrate circuit connectivity and single-unit dynamics from experimental data into artificial neural networks, introducing stronger inductive biases and closer mechanistic alignment with biology. How can we develop embodied simulations that enable the study of increasingly complex bodies and neural circuits? In this work, we address the challenge through coordinated advances in the simulated body, neural architecture, and training infrastructure. We introduce Rat v2, an efficient and flexible biomechanical body for simulating rat behavior. To control this body, we develop Rat NCAP, a biologically grounded neural architecture for locomotion based on mammalian spinal circuits that incorporates cell-type-specific connectivity and a novel flexor-extensor neuromechanical interface. To optimize circuit parameters, we develop GPU-accelerated simulation and training infrastructure. The model learns to locomote at different speeds and transition between gaits without imitation learning, producing locomotion statistics, kinematics, and cell-type-specific neural activity consistent with experimental data. Analyses reveal that the neuromechanical interface substantially affects trainability and gait quality, and in silico cell-type ablations reproduce known gait phenotypes and predict gait changes under graded perturbations. Together, these findings support the view that embodied simulations at an intermediate level of abstraction can simultaneously reproduce complex behavior and yield mechanistic insights into the neural circuits that generate it.</abstract>
+    </arXivRaw>
+
+            </metadata>
+        </record>
+<resumptionToken expirationDate='2026-11-23T00:00:00Z'>verb%3DListRecords%26metadataPrefix%3DarXivRaw%26from%3D2026-11-20%26set%3Dcs%253Acs%253ACV%26skip%3D9</resumptionToken>
+    </ListRecords>
+</OAI-PMH>

@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/BBUw+9jpPHtwqal815s0XuI8NVM</id>
+  <title>arXiv Query: search_query=&amp;id_list=2604.00648,2505.12200,2601.04194,2605.04059,2602.05202,2604.09227,2603.12766,2510.26782,2512.23333,2512.04085,2512.18692,2512.03575,2605.19613,2510.10285,2602.21992,2604.16481,2603.08075,2511.17059,2602.24059,2603.02098,2603.09573,2602.22073,2605.05027,2503.01347,2603.16538,2602.17558,2605.15682,2602.13172,2603.00207&amp;start=0&amp;max_results=29</title>
+  <updated>2026-11-22T18:04:30Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=29&amp;id_list=2604.00648,2505.12200,2601.04194,2605.04059,2602.05202,2604.09227,2603.12766,2510.26782,2512.23333,2512.04085,2512.18692,2512.03575,2605.19613,2510.10285,2602.21992,2604.16481,2603.08075,2511.17059,2602.24059,2603.02098,2603.09573,2602.22073,2605.05027,2503.01347,2603.16538,2602.17558,2605.15682,2602.13172,2603.00207" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>29</opensearch:itemsPerPage>
+  <opensearch:totalResults>29</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2503.01347v4</id>
+    <title>From Spots to Pixels: Dense Spatial Gene Expression Prediction from Histology Images</title>
+    <updated>2025-11-25T08:48:41Z</updated>
+    <link href="https://arxiv.org/abs/2503.01347v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2503.01347v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Spatial transcriptomics (ST) measures gene expression at fine-grained spatial resolution, offering insights into tissue molecular landscapes. Previous methods for spatial gene expression prediction typically crop spots of interest from histopathology slide images, and train models to map each spot to a corresponding gene expression profile. However, these methods inherently lose the spatial resolution in gene expression: 1) each spot often contains multiple cells with distinct gene expression profiles; 2) spots are typically defined at fixed spatial resolutions, limiting the ability to predict gene expression at varying scales. To address these limitations, this paper presents PixNet, a dense prediction network capable of predicting spatially resolved gene expression across spots of varying sizes and scales directly from histopathology slide images. Different from previous methods that map individual spots to gene expression values, we generate a spatially dense continuous gene expression map from the histopathology slide image, and aggregate values within spots of interest to predict the gene expression. Our PixNet outperforms state-of-the-art methods on four common ST datasets in multiple spatial scales. The source code will be publicly available.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-03-03T09:38:01Z</published>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Ruikun Zhang</name>
+    </author>
+    <author>
+      <name>Yan Yang</name>
+    </author>
+    <author>
+      <name>Liyuan Pan</name>
+    </author>
+  </entry>
+<entry>
+    <id>http://arxiv.org/abs/2605.04059v1</id>
+    <title>Continual Distillation of Teachers from Different Domains</title>
+    <updated>2026-04-10T10:26:30Z</updated>
+    <link href="https://arxiv.org/abs/2605.04059v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.04059v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Deep learning models continue to scale, with some requiring more storage than many large-scale datasets. Thus, we introduce a new paradigm: Continual Distillation (CD), where a student learns sequentially from a stream of teacher models without retaining access to earlier teachers. CD faces two challenges: teacher training data is unavailable, and teachers have varying expertise. We show that external unlabeled data enables Unseen Knowledge Transfer (UKT), allowing the student to acquire information from domains not present in the training data, while known to the teacher. We also show that sequential distillation causes Unseen Knowledge Forgetting (UKF) when transferred knowledge is lost after training on later teachers. To better trade off between UKT and UKF, we propose Self External Data Distillation (SE2D), a method that preserves logits on external data to stabilize learning across heterogeneous teachers. Experiments on multiple benchmarks show that SE2D reduces UKF and improves cross-domain generalization. The code and implementation for this work are publicly available at: https://github.com/Nicolas1203/continual_distillation.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-10T10:26:30Z</published>
+    <arxiv:comment>Accepted to CVPR 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Nicolas Michel</name>
+    </author>
+    <author>
+      <name>Maorong Wang</name>
+    </author>
+    <author>
+      <name>Jiangpeng He</name>
+    </author>
+    <author>
+      <name>Toshihiko Yamasaki</name>
+    </author>
+  </entry>
+</feed>

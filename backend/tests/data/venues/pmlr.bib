@@ -1,0 +1,65 @@
+@Proceedings{ICML2026,
+  title =     {Proceedings of the 43rd International Conference on Machine Learning},
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning},
+  editor =    {Tong Zhang and Miroslav Dudik and Martin Jaggi and Alekh Agarwal and Sharon Li and Dale Schuurmans and Jerry Zhu and Felix Berkenkamp and Hanze Dong and Alberto Bietti},
+  publisher = {PMLR},
+  series =    {Proceedings of Machine Learning Research},
+  volume =    306
+}
+
+
+
+@InProceedings{pmlr-v306-abas26a,
+  title = 	 {{TUR}-{DPO}: Topology- and Uncertainty-Aware Direct Preference Optimization},
+  author =       {Abas, Abdulhady and Daneshfar, Fatemeh and Mirjalili, Seyedali and Oussalah, Mourad},
+  booktitle = 	 {Proceedings of the 43rd International Conference on Machine Learning},
+  pages = 	 {1--21},
+  year = 	 {2026},
+  editor = 	 {Zhang, Tong and Dudik, Miroslav and Jaggi, Martin and Agarwal, Alekh and Li, Sharon and Schuurmans, Dale and Zhu, Jerry and Berkenkamp, Felix and Dong, Hanze and Bietti, Alberto},
+  volume = 	 {306},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {06--11 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v306/main/assets/abas26a/abas26a.pdf},
+  url = 	 {https://proceedings.mlr.press/v306/abas26a.html},
+  abstract = 	 {Aligning large language models (LLMs) with human preferences is commonly done via reinforcement learning from human feedback (RLHF) with Proximal Policy Optimization (PPO) or, more simply, via Direct Preference Optimization (DPO). While DPO is stable and RL-free, it treats preferences as flat winner vs. loser signals and is sensitive to noisy or brittle preferences arising from fragile chains of thought. We propose TUR-DPO, a topology- and uncertainty-aware variant of DPO that rewards how answers are derived, not only what they say, by eliciting lightweight reasoning topologies and combining semantic faithfulness, utility, and topology quality into a calibrated uncertainty signal. A small learnable reward is factorized over these signals and incorporated into an uncertainty-weighted DPO objective that remains RL-free and relies only on a fixed or moving reference policy. Empirically, across open 7–8B models and benchmarks spanning mathematical reasoning, factual question answering, summarization, and helpful/harmless dialogue, TUR-DPO improves judge win-rates, faithfulness, and calibration relative to DPO while preserving training simplicity and avoiding online rollouts. We further observe consistent gains in multimodal and long-context settings, and show that TUR-DPO matches or exceeds PPO on reasoning-centric tasks while maintaining operational simplicity.}
+}
+
+
+
+@InProceedings{pmlr-v306-aldoma26a,
+  title = 	 {Position: Predictive Uncertainty Is Not Enough — Joint Distribution for Full Uncertainty Representation},
+  author =       {Aldoma, Adria and Gurbindo, Unai and Brando, Axel},
+  booktitle = 	 {Proceedings of the 43rd International Conference on Machine Learning},
+  pages = 	 {169240--169260},
+  year = 	 {2026},
+  editor = 	 {Zhang, Tong and Dudik, Miroslav and Jaggi, Martin and Agarwal, Alekh and Li, Sharon and Schuurmans, Dale and Zhu, Jerry and Berkenkamp, Felix and Dong, Hanze and Bietti, Alberto},
+  volume = 	 {306},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {06--11 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v306/main/assets/aldoma26a/aldoma26a.pdf},
+  url = 	 {https://proceedings.mlr.press/v306/aldoma26a.html},
+  abstract = 	 {When AI is deployed in safety-critical domains, erroneous and overconfident predictions can have severe consequences, making comprehensive uncertainty quantification (UQ) essential for responsible decision-making. Current UQ methods based on epistemic and aleatoric decomposition are insufficient for fully understanding the problem, a limitation further compounded by treating these terms in isolation from uncertainty about the domain. Our position claims that any meaningful analysis must account for three sources of uncertainty — domain, epistemic, and aleatoric — and that only the joint distribution $p(x,y|\mathcal{D})$ provides a coherent representation of them. We mirror prior findings showing that information-theoretic UQ methods are suboptimal in ID and OOD settings, mainly due to the difficulty of disentangling epistemic and aleatoric components. We argue that modeling the unconditional distribution $p(x|\mathcal{D})$ is necessary to account for input validity, giving rise to a third class of uncertainty: domain uncertainty. Finally, by jointly considering the domain distribution and the conditional distribution $p(y|x,\mathcal{D})$, we argue that their product, $p(x,y|\mathcal{D})$, captures all relevant sources of uncertainty.}
+}
+
+
+
+@InProceedings{pmlr-v306-bhattacharya26a,
+  title = 	 {Dynamic High-Dimensional Facility Location with Low Recourse},
+  author =       {Bhattacharya, Sayan and Costa, Mart\'{\i}n and Lattanzi, Silvio and {\L}\k{a}cki, Jakub and Parotsidis, Nikos},
+  booktitle = 	 {Proceedings of the 43rd International Conference on Machine Learning},
+  pages = 	 {7961--7979},
+  year = 	 {2026},
+  editor = 	 {Zhang, Tong and Dudik, Miroslav and Jaggi, Martin and Agarwal, Alekh and Li, Sharon and Schuurmans, Dale and Zhu, Jerry and Berkenkamp, Felix and Dong, Hanze and Bietti, Alberto},
+  volume = 	 {306},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {06--11 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v306/main/assets/bhattacharya26a/bhattacharya26a.pdf},
+  url = 	 {https://proceedings.mlr.press/v306/bhattacharya26a.html},
+  abstract = 	 {We study the problem of dynamic facility location with non-uniform costs. Facility location is a central problem in unsupervised learning and in recent years the dynamic version of the problem has been extensively studied. In this paper, we study the setting where clients are added and deleted in real-time and one is interested in maintaining efficiently a stable and high-quality solution. Interestingly, we are able to show that on High Dimensional Euclidean metrics it is possible to obtain efficient algorithms for this problem. More formally, we obtain a randomized algorithm for dynamic facility location in $d$-dimensional Euclidean spaces with $\gamma$ approximation ratio, $O(\log m)$ amortized recourse and $\text{poly}(d) \cdot (m+n)^{O(1/\gamma)}$ amortized update time, for every sufficiently large constant $\gamma \geq 1$. Our result is the first efficient dynamic algorithm for the <em>non-uniform</em> dynamic facility location problem in high-dimensional Euclidean spaces. It also provides a stronger recourse bound than the existing solutions.}
+}
+
+
+

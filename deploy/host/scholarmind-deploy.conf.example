@@ -1,0 +1,56 @@
+# scholarmind-deploy.conf: settings of scholarmind-deploy.sh on this host. Copy it next to the
+# script as scholarmind-deploy.conf and fill it in; the values below are examples. The
+# script sources this file, so keep it writable only by the deploy user. Lines left out keep
+# the defaults shown.
+
+# The container (the api and the workers), and the image repository it runs (tagged with the
+# commit).
+CONTAINER=scholarmind
+IMAGE=scholarmind
+
+# Directory for the lock, the deployed version, logs and build directories. Required.
+STATE_DIR=/srv/scholarmind/deploy
+
+# How many images of IMAGE to keep, newest first; the running one always stays.
+KEEP_IMAGES=3
+
+# Extra flags for docker build: PyPI indexes and npm registries, each tried in turn (comma
+# separated), and the proxy if the build cannot reach them directly.
+BUILD_FLAGS="--build-arg PIP_INDEXES=https://pypi.tuna.tsinghua.edu.cn/simple,https://mirrors.aliyun.com/pypi/simple,https://pypi.org/simple"
+BUILD_FLAGS="$BUILD_FLAGS --build-arg NPM_REGISTRIES=https://registry.npmmirror.com,https://registry.npmjs.org"
+#BUILD_FLAGS="$BUILD_FLAGS --build-arg HTTP_PROXY=http://proxy.example:7890 --build-arg HTTPS_PROXY=http://proxy.example:7890"
+
+# Flags the database migration and the container both get. All flags are split on spaces, so
+# values cannot contain spaces (put such variables into the env file). The network must exist,
+# with PostgreSQL and Redis on it (deploy/README.md).
+RUN_FLAGS="--network scholarmind -e TZ=Asia/Shanghai --env-file /srv/scholarmind/.env -v /srv/scholarmind/config.yaml:/app/config.yaml:ro"
+
+# Flags on top of RUN_FLAGS: for the migration (it runs with --rm, so no --restart), and for
+# the container.
+MIGRATE_FLAGS="--cpus 1 --memory 512m --memory-swap 512m"
+# ANALYZE_WORKERS: how many analyze workers run in parallel; the fetch worker and the cron
+# scheduler are always one each. Memory: measured idle, the api takes about 60 MB and the
+# workers about 210 MB; each analyze worker at work adds about 0.4 GB (its job's Python
+# process and the pi/Node process it starts, 0.1 GB just to start), more once pi reads whole
+# papers (stage 3). 3 GB leaves room for 2 analyze workers then; raise it with
+# ANALYZE_WORKERS, and set it from docker stats while analyses run.
+CONTAINER_FLAGS="--restart always --cpus 3 --memory 3g --memory-swap 3g -e ANALYZE_WORKERS=2"
+
+# Health check of the api: the URL fetched inside the container, how long to wait for it after
+# the start, and how often to try. Defaults: port 8000, 90 s, 2 s.
+#HEALTH_URL=http://127.0.0.1:8000/api/health
+#HEALTH_TIMEOUT=90
+#HEALTH_INTERVAL=2
+
+# Seconds the container must then keep running, not restarted, to count as up: its workers
+# exit at once when they cannot start. Default 15.
+#SETTLE=15
+
+# Seconds docker stop waits before killing an old container. Default 30.
+#STOP_TIMEOUT=30
+
+# Largest source archive accepted, in MB. Default 200.
+#MAX_ARCHIVE_MB=200
+
+# The docker command. Default: docker.
+#DOCKER=docker

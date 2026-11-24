@@ -1,0 +1,1017 @@
+{
+ "ACL": {
+  "meta": {
+   "count": 2641
+  },
+  "results": [
+   {
+    "id": "https://openalex.org/W4415343790",
+    "doi": "https://doi.org/10.18653/v1/2026.acl-industry.66",
+    "title": "From 2:4 to 8:16 sparsity patterns in LLMs for Outliers and Weights with Variance Correction",
+    "type": "conference-paper",
+    "publication_date": "2026-01-01",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": "957",
+     "last_page": "965"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Egor Maximov"
+      },
+      "raw_author_name": "Egor Maximov"
+     },
+     {
+      "author": {
+       "display_name": "Yulia Kuzkina"
+      },
+      "raw_author_name": "Yulia Kuzkina"
+     },
+     {
+      "author": {
+       "display_name": "Egor Shvetsov"
+      },
+      "raw_author_name": "Egor Shvetsov"
+     },
+     {
+      "author": {
+       "display_name": "Azamat Kanametov"
+      },
+      "raw_author_name": "Azamat Kanametov"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.18653/v1/2026.acl-industry.66",
+      "pdf_url": "https://aclanthology.org/2026.acl-industry.66.pdf"
+     },
+     {
+      "landing_page_url": "https://arxiv.org/abs/2507.03052",
+      "pdf_url": "https://arxiv.org/pdf/2507.03052"
+     },
+     {
+      "landing_page_url": "https://doi.org/10.48550/arxiv.2507.03052",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://aclanthology.org/2026.acl-industry.66.pdf"
+    },
+    "abstract_inverted_index": {
+     "As": [
+      0
+     ],
+     "large": [
+      1
+     ],
+     "language": [
+      2
+     ],
+     "models": [
+      3
+     ],
+     "(LLMs)": [
+      4
+     ],
+     "grow": [
+      5
+     ],
+     "in": [
+      6
+     ],
+     "size,": [
+      7
+     ],
+     "efficient": [
+      8
+     ],
+     "compression": [
+      9
+     ],
+     "techniques": [
+      10
+     ],
+     "like": [
+      11
+     ],
+     "quantization": [
+      12,
+      18
+     ],
+     "and": [
+      13
+     ],
+     "sparsification": [
+      14
+     ],
+     "are": [
+      15
+     ],
+     "critical.": [
+      16
+     ],
+     "While": [
+      17
+     ],
+     "maintains": [
+      19
+     ],
+     "performance": [
+      20
+     ],
+     "with": [
+      21
+     ],
+     "reduced": [
+      22
+     ],
+     "precision,": [
+      23
+     ],
+     "structured": [
+      24
+     ]
+    }
+   },
+   {
+    "id": "https://openalex.org/W7166862435",
+    "doi": "https://doi.org/10.18653/v1/2026.acl-long.1",
+    "title": "OctoTools: A Multi-Agent Framework with Extensible Tools for Complex Reasoning",
+    "type": "conference-paper",
+    "publication_date": "2026-01-01",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": "1",
+     "last_page": "86"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Lu Pan"
+      },
+      "raw_author_name": "Pan Lu"
+     },
+     {
+      "author": {
+       "display_name": "Bowen Chen"
+      },
+      "raw_author_name": "Bowen Chen"
+     },
+     {
+      "author": {
+       "display_name": "Sheng Liu"
+      },
+      "raw_author_name": "Sheng Liu"
+     },
+     {
+      "author": {
+       "display_name": "Rahul Thapa"
+      },
+      "raw_author_name": "Rahul Thapa"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.18653/v1/2026.acl-long.1",
+      "pdf_url": "https://aclanthology.org/2026.acl-long.1.pdf"
+     },
+     {
+      "landing_page_url": "https://arxiv.org/abs/2502.11271",
+      "pdf_url": "https://arxiv.org/pdf/2502.11271"
+     },
+     {
+      "landing_page_url": "https://doi.org/10.48550/arxiv.2502.11271",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://aclanthology.org/2026.acl-long.1.pdf"
+    },
+    "abstract_inverted_index": {
+     "Solving": [
+      0
+     ],
+     "complex": [
+      1
+     ],
+     "reasoning": [
+      2
+     ],
+     "tasks": [
+      3
+     ],
+     "may": [
+      4
+     ],
+     "involve": [
+      5
+     ],
+     "visual": [
+      6
+     ],
+     "understanding,": [
+      7
+     ],
+     "domain": [
+      8
+     ],
+     "knowledge": [
+      9
+     ],
+     "retrieval,": [
+      10
+     ],
+     "numerical": [
+      11
+     ],
+     "calculation,": [
+      12
+     ],
+     "and": [
+      13
+     ],
+     "multi-step": [
+      14
+     ],
+     "reasoning.": [
+      15
+     ],
+     "Existing": [
+      16
+     ],
+     "methods": [
+      17
+     ],
+     "augment": [
+      18
+     ],
+     "large": [
+      19
+     ],
+     "language": [
+      20
+     ],
+     "models": [
+      21
+     ],
+     "(LLMs)": [
+      22
+     ],
+     "with": [
+      23
+     ],
+     "external": [
+      24
+     ]
+    }
+   },
+   {
+    "id": "https://openalex.org/W4416450646",
+    "doi": "https://doi.org/10.18653/v1/2026.acl-long.100",
+    "title": "EquivPruner: Boosting Efficiency and Quality in LLM-Based Search via Action Pruning",
+    "type": "conference-paper",
+    "publication_date": "2026-01-01",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": "2211",
+     "last_page": "2226"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Jiawei Liu"
+      },
+      "raw_author_name": "Jiawei Liu"
+     },
+     {
+      "author": {
+       "display_name": "Qisi Chen"
+      },
+      "raw_author_name": "Qisi Chen"
+     },
+     {
+      "author": {
+       "display_name": "Jianshu Zhang"
+      },
+      "raw_author_name": "Jianshu Zhang"
+     },
+     {
+      "author": {
+       "display_name": "Quan Liu"
+      },
+      "raw_author_name": "Quan Liu"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.18653/v1/2026.acl-long.100",
+      "pdf_url": "https://aclanthology.org/2026.acl-long.100.pdf"
+     },
+     {
+      "landing_page_url": "https://scholars.cityu.edu.hk/en/publications/fc4bf498-6df4-4ba6-9d4a-68a8788e76c3",
+      "pdf_url": "https://scholars.cityu.edu.hk/ws/files/512259511/495758578.pdf"
+     },
+     {
+      "landing_page_url": "https://arxiv.org/abs/2505.16312",
+      "pdf_url": "https://arxiv.org/pdf/2505.16312"
+     },
+     {
+      "landing_page_url": "https://doi.org/10.48550/arxiv.2505.16312",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://aclanthology.org/2026.acl-long.100.pdf"
+    },
+    "abstract_inverted_index": {
+     "Large": [
+      0
+     ],
+     "Language": [
+      1
+     ],
+     "Models": [
+      2
+     ],
+     "(LLMs)": [
+      3
+     ],
+     "excel": [
+      4
+     ],
+     "at": [
+      5
+     ],
+     "complex": [
+      6
+     ],
+     "reasoning": [
+      7
+     ],
+     "through": [
+      8
+     ],
+     "search": [
+      9
+     ],
+     "algorithms,": [
+      10
+     ],
+     "yet": [
+      11
+     ],
+     "current": [
+      12
+     ],
+     "strategies": [
+      13
+     ],
+     "often": [
+      14
+     ],
+     "suffer": [
+      15
+     ],
+     "from": [
+      16
+     ],
+     "massive": [
+      17
+     ],
+     "token": [
+      18
+     ],
+     "consumption": [
+      19
+     ],
+     "due": [
+      20
+     ],
+     "to": [
+      21
+     ],
+     "redundant": [
+      22
+     ],
+     "exploration": [
+      23
+     ],
+     "of": [
+      24
+     ]
+    }
+   }
+  ]
+ },
+ "RSS": {
+  "meta": {
+   "count": 208
+  },
+  "results": [
+   {
+    "id": "https://openalex.org/W4417290292",
+    "doi": "https://doi.org/10.15607/rss.2026.xxii.001",
+    "title": "One-Shot Real-World Demonstration Synthesis for Scalable Bimanual Manipulation",
+    "type": "conference-paper",
+    "publication_date": "2026-07-13",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": null,
+     "last_page": null
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Huayi Zhou"
+      },
+      "raw_author_name": "Huayi Zhou"
+     },
+     {
+      "author": {
+       "display_name": "Kui Jia"
+      },
+      "raw_author_name": "Kui Jia"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.15607/rss.2026.xxii.001",
+      "pdf_url": "https://doi.org/10.15607/rss.2026.xxii.001"
+     },
+     {
+      "landing_page_url": "https://arxiv.org/abs/2512.09297",
+      "pdf_url": "https://arxiv.org/pdf/2512.09297"
+     },
+     {
+      "landing_page_url": "https://doi.org/10.48550/arxiv.2512.09297",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://doi.org/10.15607/rss.2026.xxii.001"
+    },
+    "abstract_inverted_index": {
+     "Learning": [
+      0
+     ],
+     "dexterous": [
+      1
+     ],
+     "bimanual": [
+      2
+     ],
+     "manipulation": [
+      3
+     ],
+     "policies": [
+      4
+     ],
+     "critically": [
+      5
+     ],
+     "depends": [
+      6
+     ],
+     "on": [
+      7
+     ],
+     "large-scale,": [
+      8
+     ],
+     "high-quality": [
+      9
+     ],
+     "demonstrations,": [
+      10
+     ],
+     "yet": [
+      11
+     ],
+     "current": [
+      12
+     ],
+     "paradigms": [
+      13
+     ],
+     "face": [
+      14
+     ],
+     "inherent": [
+      15
+     ],
+     "trade-offs:": [
+      16
+     ],
+     "teleoperation": [
+      17
+     ],
+     "provides": [
+      18
+     ],
+     "physically": [
+      19
+     ],
+     "grounded": [
+      20
+     ],
+     "data": [
+      21
+     ],
+     "but": [
+      22
+     ],
+     "is": [
+      23
+     ],
+     "prohibitively": [
+      24
+     ]
+    }
+   },
+   {
+    "id": "https://openalex.org/W7204757526",
+    "doi": "https://doi.org/10.15607/rss.2026.xxii.011",
+    "title": "RAG-Diff: Adapting Diffusion Policies to Dynamic Constraints with Retrieval-Augmented Guidance",
+    "type": "conference-paper",
+    "publication_date": "2026-07-13",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": null,
+     "last_page": null
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Ruolin Ye"
+      },
+      "raw_author_name": "Ruolin Ye"
+     },
+     {
+      "author": {
+       "display_name": "Nayoung Ha"
+      },
+      "raw_author_name": "Nayoung Ha"
+     },
+     {
+      "author": {
+       "display_name": "Shuaixing Chen"
+      },
+      "raw_author_name": "Shuaixing Chen"
+     },
+     {
+      "author": {
+       "display_name": "Qiandao Liu"
+      },
+      "raw_author_name": "Qiandao Liu"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.15607/rss.2026.xxii.011",
+      "pdf_url": "https://doi.org/10.15607/rss.2026.xxii.011"
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://doi.org/10.15607/rss.2026.xxii.011"
+    },
+    "abstract_inverted_index": null
+   }
+  ]
+ },
+ "AAAI": {
+  "meta": {
+   "count": 4914
+  },
+  "results": [
+   {
+    "id": "https://openalex.org/W7138329584",
+    "doi": "https://doi.org/10.1609/aaai.v40i1.36958",
+    "title": "Resource Efficient Sleep Staging via Multi-Level Masking and Prompt Learning",
+    "type": "conference-paper",
+    "publication_date": "2026-03-17",
+    "biblio": {
+     "volume": "40",
+     "issue": "1",
+     "first_page": "3",
+     "last_page": "11"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Lejun Ai"
+      },
+      "raw_author_name": "Lejun Ai"
+     },
+     {
+      "author": {
+       "display_name": "Yulong Li"
+      },
+      "raw_author_name": "Yulong Li"
+     },
+     {
+      "author": {
+       "display_name": "Haodong Yi"
+      },
+      "raw_author_name": "Haodong Yi"
+     },
+     {
+      "author": {
+       "display_name": "Jixuan Xie"
+      },
+      "raw_author_name": "Jixuan Xie"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.1609/aaai.v40i1.36958",
+      "pdf_url": "https://ojs.aaai.org/index.php/AAAI/article/download/36958/40920"
+     },
+     {
+      "landing_page_url": "https://ojs.aaai.org/index.php/AAAI/article/view/36958",
+      "pdf_url": null
+     },
+     {
+      "landing_page_url": "http://arxiv.org/abs/2511.06785",
+      "pdf_url": "https://arxiv.org/pdf/2511.06785"
+     },
+     {
+      "landing_page_url": "https://doi.org/10.48550/arxiv.2511.06785",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://ojs.aaai.org/index.php/AAAI/article/download/36958/40920"
+    },
+    "abstract_inverted_index": {
+     "Automatic": [
+      0
+     ],
+     "sleep": [
+      1,
+      9,
+      13
+     ],
+     "staging": [
+      2
+     ],
+     "plays": [
+      3
+     ],
+     "a": [
+      4
+     ],
+     "vital": [
+      5
+     ],
+     "role": [
+      6
+     ],
+     "in": [
+      7
+     ],
+     "assessing": [
+      8
+     ],
+     "quality": [
+      10
+     ],
+     "and": [
+      11,
+      22
+     ],
+     "diagnosing": [
+      12
+     ],
+     "disorders.": [
+      14
+     ],
+     "Most": [
+      15
+     ],
+     "existing": [
+      16
+     ],
+     "methods": [
+      17
+     ],
+     "rely": [
+      18
+     ],
+     "heavily": [
+      19
+     ],
+     "on": [
+      20
+     ],
+     "long": [
+      21
+     ],
+     "continuous": [
+      23
+     ],
+     "EEG": [
+      24
+     ]
+    }
+   },
+   {
+    "id": "https://openalex.org/W7138010386",
+    "doi": "https://doi.org/10.1609/aaai.v40i1.36959",
+    "title": "AutoMalDesc: Large-Scale Script Analysis for Cyber Threat Research",
+    "type": "conference-paper",
+    "publication_date": "2026-03-14",
+    "biblio": {
+     "volume": "40",
+     "issue": "44",
+     "first_page": "12",
+     "last_page": "20"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Alexandru-Mihai Apostu"
+      },
+      "raw_author_name": "Alexandru-Mihai Apostu"
+     },
+     {
+      "author": {
+       "display_name": "Andrei Preda"
+      },
+      "raw_author_name": "Andrei Preda"
+     },
+     {
+      "author": {
+       "display_name": "Alexandra Daniela Damir"
+      },
+      "raw_author_name": "Alexandra Daniela Damir"
+     },
+     {
+      "author": {
+       "display_name": "Diana Bolocan"
+      },
+      "raw_author_name": "Diana Bolocan"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.1609/aaai.v40i1.36959",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": null
+    },
+    "abstract_inverted_index": {
+     "Generating": [
+      0
+     ],
+     "thorough": [
+      1
+     ],
+     "natural": [
+      2
+     ],
+     "language": [
+      3
+     ],
+     "explanations": [
+      4
+     ],
+     "for": [
+      5
+     ],
+     "threat": [
+      6
+     ],
+     "detections": [
+      7
+     ],
+     "remains": [
+      8
+     ],
+     "an": [
+      9
+     ],
+     "open": [
+      10
+     ],
+     "problem": [
+      11
+     ],
+     "in": [
+      12,
+      18
+     ],
+     "cybersecurity": [
+      13
+     ],
+     "research,": [
+      14
+     ],
+     "despite": [
+      15
+     ],
+     "significant": [
+      16
+     ],
+     "advances": [
+      17
+     ],
+     "automated": [
+      19
+     ],
+     "malware": [
+      20
+     ],
+     "detection": [
+      21
+     ],
+     "systems.": [
+      22
+     ],
+     "In": [
+      23
+     ],
+     "this": [
+      24
+     ]
+    }
+   }
+  ]
+ },
+ "ACM MM": {
+  "meta": {
+   "count": 1901
+  },
+  "results": [
+   {
+    "id": "https://openalex.org/W7226013255",
+    "doi": "https://doi.org/10.1145/3767308.3832536",
+    "title": "Real-World Video-Based Physiological Signal Estimation and Robust Modeling",
+    "type": "conference-paper",
+    "publication_date": "2026-11-09",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": "17263",
+     "last_page": "17267"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Gan Pei"
+      },
+      "raw_author_name": "Gan Pei"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.1145/3767308.3832536",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": null
+    },
+    "abstract_inverted_index": null
+   },
+   {
+    "id": "https://openalex.org/W7117572692",
+    "doi": "https://doi.org/10.1145/3767308.3832540",
+    "title": "Aerial World Model for Long-horizon Visual Generation and Navigation in 3D Space",
+    "type": "conference-paper",
+    "publication_date": "2026-11-09",
+    "biblio": {
+     "volume": null,
+     "issue": null,
+     "first_page": "16697",
+     "last_page": "16706"
+    },
+    "authorships": [
+     {
+      "author": {
+       "display_name": "Weichen Zhang"
+      },
+      "raw_author_name": "Weichen Zhang"
+     },
+     {
+      "author": {
+       "display_name": "Peizhi Tang"
+      },
+      "raw_author_name": "Peizhi Tang"
+     },
+     {
+      "author": {
+       "display_name": "Xin Zeng"
+      },
+      "raw_author_name": "Xin Zeng"
+     },
+     {
+      "author": {
+       "display_name": "Fanhang Man"
+      },
+      "raw_author_name": "Fanhang Man"
+     }
+    ],
+    "locations": [
+     {
+      "landing_page_url": "https://doi.org/10.1145/3767308.3832540",
+      "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3767308.3832540?download=true"
+     },
+     {
+      "landing_page_url": "http://arxiv.org/abs/2512.21887",
+      "pdf_url": "https://arxiv.org/pdf/2512.21887"
+     },
+     {
+      "landing_page_url": "https://doi.org/10.48550/arxiv.2512.21887",
+      "pdf_url": null
+     }
+    ],
+    "primary_location": {
+     "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3767308.3832540?download=true"
+    },
+    "abstract_inverted_index": {
+     "Unmanned": [
+      0
+     ],
+     "aerial": [
+      1
+     ],
+     "vehicles": [
+      2
+     ],
+     "(UAVs)": [
+      3
+     ],
+     "have": [
+      4
+     ],
+     "emerged": [
+      5
+     ],
+     "as": [
+      6
+     ],
+     "powerful": [
+      7
+     ],
+     "embodied": [
+      8
+     ],
+     "agents.": [
+      9
+     ],
+     "One": [
+      10
+     ],
+     "of": [
+      11
+     ],
+     "the": [
+      12
+     ],
+     "core": [
+      13
+     ],
+     "abilities": [
+      14
+     ],
+     "is": [
+      15
+     ],
+     "autonomous": [
+      16
+     ],
+     "navigation": [
+      17,
+      23
+     ],
+     "in": [
+      18
+     ],
+     "large-scale": [
+      19
+     ],
+     "three-dimensional": [
+      20
+     ],
+     "environments.": [
+      21
+     ],
+     "Existing": [
+      22
+     ],
+     "policies,": [
+      24
+     ]
+    }
+   }
+  ]
+ }
+}
