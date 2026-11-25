@@ -1,21 +1,23 @@
-import { ChevronDown, KeyRound, LayoutDashboard, LogOut, UserRound, X } from 'lucide-react'
+import { ChevronDown, KeyRound, LayoutDashboard, LogOut, UserRound } from 'lucide-react'
 import { LazyMotion, MotionConfig, domAnimation } from 'motion/react'
-import { Dialog, DropdownMenu, Popover, Tooltip } from 'radix-ui'
-import { useEffect, useState } from 'react'
-import { AgentPage, UsersPage } from './Admin'
+import { DropdownMenu, Popover, Tooltip } from 'radix-ui'
+import { useEffect, useRef, useState } from 'react'
+import { AgentPage, SourcesPage, UsersPage } from './Admin'
 import { logout, useApi } from './api'
 import { Avatar } from './Avatar'
 import Daily from './Daily'
 import Discover from './Discover'
 import Login from './Login'
 import PaperView from './PaperView'
-import PasswordForm from './Password'
+import { PasswordDialog } from './Password'
 import Profile from './Profile'
 import Reader from './Reader'
 import { useNow, useWatched, useWatchReadings, watchedLine } from './readings'
 import { navigate, rememberList, useLocation } from './router'
+import Setup from './Setup'
 import Starred from './Starred'
 import { Asker, ScrollCue, Toaster } from './ui'
+import { Welcome } from './Welcome'
 
 const NAV = [
   ['/', '每日新增'],
@@ -95,6 +97,25 @@ function Watcher() {
   return null
 }
 
+/** First steps. An admin of a new, empty deployment is taken to the setup wizard when the app opens
+ * (once a visit, so the header still leads elsewhere); everyone sees the welcome once, an admin
+ * after the wizard. */
+function Onboarding({ pathname }: { pathname: string }) {
+  const me = useApi<{ username: string; avatar?: string | null; is_admin?: boolean }>('/me')
+  const admin = !!me.data?.is_admin
+  const setup = useApi<{ done: boolean; papers: number }>(admin ? '/admin/setup' : null)
+  const fresh = !!setup.data && !setup.data.done && setup.data.papers === 0
+  const decided = useRef(false)
+  useEffect(() => {
+    if (!setup.data || decided.current) return
+    decided.current = true
+    if (fresh && pathname !== '/setup') navigate('/setup', true)
+  }, [setup.data, fresh, pathname])
+  // A backend without the setup endpoint (an error) has no wizard to wait for.
+  const ready = pathname !== '/setup' && (!admin || !!setup.error || (!!setup.data && !fresh))
+  return me.data ? <Welcome key={me.data.username} me={me.data} ready={ready} /> : null
+}
+
 /** The account at the right end of the header: the name opens a menu with the profile, changing
  * the password (in a dialog, without leaving the page), for admins the admin console, and logging
  * out. */
@@ -148,23 +169,7 @@ function UserMenu({ username, avatar, admin, current }: { username?: string; ava
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      <Dialog.Root open={changing} onOpenChange={setChanging}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/30 data-[state=open]:animate-fade" />
-          <Dialog.Content
-            aria-describedby={undefined}
-            className="popover fixed top-[42%] left-1/2 z-50 w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-6 data-[state=open]:animate-rise"
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <Dialog.Title className="font-serif text-lg font-semibold text-ink">修改密码</Dialog.Title>
-              <Dialog.Close className="icon-btn -mr-2" aria-label="关闭">
-                <X size={16} strokeWidth={1.75} />
-              </Dialog.Close>
-            </div>
-            <PasswordForm />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <PasswordDialog open={changing} onOpenChange={setChanging} />
     </>
   )
 }
@@ -173,8 +178,8 @@ export default function App() {
   const { pathname, search } = useLocation()
   const paper = pathname.match(/^\/papers\/(\d+)(\/read)?$/)
   const list = pathname === '/' || pathname === '/library' || pathname === '/starred'
-  const admin = pathname === '/admin/agent' || pathname === '/admin/users'
-  const known = list || pathname === '/login' || pathname === '/me' || admin || !!paper
+  const admin = pathname === '/admin/agent' || pathname === '/admin/users' || pathname === '/admin/sources'
+  const known = list || pathname === '/login' || pathname === '/me' || pathname === '/setup' || admin || !!paper
   // Unknown paths go to the daily page, which in turn sends logged-out visitors to login.
   useEffect(() => {
     if (pathname === '/admin') navigate('/admin/agent', true)
@@ -192,6 +197,8 @@ export default function App() {
   else if (pathname === '/me') page = <Profile />
   else if (pathname === '/admin/agent') page = <AgentPage />
   else if (pathname === '/admin/users') page = <UsersPage />
+  else if (pathname === '/admin/sources') page = <SourcesPage />
+  else if (pathname === '/setup') page = <Setup />
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -207,6 +214,7 @@ export default function App() {
             <Asker />
             <Toaster />
             <Watcher />
+            <Onboarding pathname={pathname} />
           </Tooltip.Provider>
         )}
       </MotionConfig>

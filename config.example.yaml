@@ -1,5 +1,7 @@
 arxiv:
-  # arXiv categories to sync every day (https://arxiv.org/category_taxonomy).
+  # arXiv categories to sync every day (https://arxiv.org/category_taxonomy). An admin can also
+  # choose them on the web page (the first-run setup asks); once chosen there, those are synced
+  # instead of these, until reset there.
   categories:
     - cs.CV
     - cs.RO
@@ -10,7 +12,8 @@ sync:
   cron: "30 12 * * *"
   # Weekly check for new conference editions, same time zone: once a venue has an edition in
   # the library, its next one is imported when the proceedings appear, and the latest again
-  # for six weeks after. A venue's first edition is imported by hand (import-venue below).
+  # for six weeks after. A venue's first edition is imported by hand: an admin queues it on the
+  # web page (the first-run setup asks), or import-venue below.
   venues_cron: "0 4 * * 1"
 
 # Conferences (main-conference papers only). Built in: NeurIPS, ICML, ICLR, ICRA, IROS, RSS,
@@ -28,6 +31,7 @@ sync:
 #     adapter: pmlr  # openalex, cvf, proceedings or pmlr
 #     title: "Proceedings of CoRL {year}"
 #     min_papers: 100  # fewer listed fails the import: the site has probably changed
+#     papers_per_edition: 250  # about, for the web page's estimate; default twice min_papers
 
 # Domains and their starting research topics. Left out, the built-in vocabulary is used
 # (backend/scholarmind/vocabulary.yaml: computer vision, NLP, robotics, embodied AI, autonomous

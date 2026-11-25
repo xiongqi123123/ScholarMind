@@ -126,76 +126,104 @@ class VenueConfig(Section):
     min_pages: NonNegativeInt = 0  # openalex: shorter papers are demos, symposia and the like
     title: str = ""  # pmlr: the volume's title on the PMLR index
     exclude_title: str = ""  # regex: papers with matching titles are not main-conference
+    # papers an edition has, about, for the estimate before an import (venues.estimate)
+    papers_per_edition: PositiveInt | None = None  # None: twice min_papers
+    held_in: PositiveInt | None = None  # every > 1: a year it was held, to know the others
 
     @model_validator(mode="after")
     def _adapter_parameters(self):
         needed = {"openalex": "source", "cvf": "url", "proceedings": "url", "pmlr": "title"}
         if not getattr(self, needed[self.adapter]):
             raise ValueError(f"the {self.adapter} adapter needs {needed[self.adapter]}")
+        self.papers_per_edition = self.papers_per_edition or 2 * self.min_papers
         return self
+
+    def held(self, year: int) -> bool:
+        """Whether there is an edition this year; without held_in nothing says, so yes."""
+        return self.held_in is None or (year - self.held_in) % self.every == 0
 
 
 # Built-in conferences; config.yaml can override fields, add venues or drop them (Name: null).
+# ponytail: papers_per_edition is the latest edition's count (main conference, from its listing
+# or DBLP, 2026-11; RSS as imported), for cost estimates only: high for earlier editions, which
+# were smaller. Better too high than too low for a cost warning.
 _CVF = "https://openaccess.thecvf.com/"
 VENUES = {
     "NeurIPS": dict(
         adapter="proceedings",
         url="https://papers.nips.cc/paper_files/paper/{year}",
         min_papers=1200,
+        papers_per_edition=5824,
     ),
     "ICLR": dict(
         adapter="proceedings",
         url="https://proceedings.iclr.cc/paper_files/paper/{year}",
         min_papers=1000,
+        papers_per_edition=5351,
     ),
     "ICML": dict(
         adapter="pmlr",
         title="Proceedings of ICML {year}",
         exclude_title="^Position:",  # the position paper track, in the same PMLR volume
         min_papers=600,
+        papers_per_edition=6552,
     ),
     "CVPR": dict(
         adapter="cvf",
         url=_CVF + "CVPR{year}?day=all",
         path="/content/CVPR{year}/",
         min_papers=1000,
+        papers_per_edition=4042,
     ),
     "ICCV": dict(
         adapter="cvf",
         url=_CVF + "ICCV{year}?day=all",
         path="/content/ICCV{year}/",
         every=2,
+        held_in=2025,
         min_papers=1000,
+        papers_per_edition=2701,
     ),
     "ECCV": dict(
         adapter="cvf",
         url="https://www.ecva.net/papers.php",
         path="/eccv_{year}/",
         every=2,
+        held_in=2024,
         min_papers=800,
+        papers_per_edition=2834,
     ),
-    "ICRA": dict(adapter="openalex", source="S4210217939", min_papers=450),
-    "IROS": dict(adapter="openalex", source="S4393918188", min_papers=600),
-    "RSS": dict(adapter="openalex", source="S4306420803", min_papers=35),
+    "ICRA": dict(adapter="openalex", source="S4210217939", min_papers=450, papers_per_edition=1874),
+    "IROS": dict(adapter="openalex", source="S4393918188", min_papers=600, papers_per_edition=1986),
+    "RSS": dict(adapter="openalex", source="S4306420803", min_papers=35, papers_per_edition=208),
     "ACL": dict(
         adapter="openalex",
         source="S4393915740",
         doi=r"^10\.18653/(v1/)?{year}\.acl-(?P<track>long|short)\.",
         min_papers=350,
+        papers_per_edition=2296,
     ),
     "EMNLP": dict(
         adapter="openalex",
         source="S4363608991",
         doi=r"^10\.18653/(v1/)?{year}\.emnlp-main\.",
         min_papers=400,
+        papers_per_edition=2704,
     ),
     "AAAI": dict(
         adapter="openalex",
         source="S4210191458",
         issue_archive="https://ojs.aaai.org/index.php/AAAI/issue/archive",
         min_papers=650,
+        papers_per_edition=4040,
     ),
-    "ACM MM": dict(adapter="openalex", source="S4363608757", min_pages=7, min_papers=350),
+    "ACM MM": dict(
+        adapter="openalex",
+        source="S4363608757",
+        min_pages=7,
+        min_papers=350,
+        papers_per_edition=1901,
+    ),
 }
 
 

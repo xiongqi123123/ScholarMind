@@ -9,8 +9,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from . import arxiv
-from .config import config
+from . import agent, arxiv
 from .db import Paper, SyncState, engine
 
 log = logging.getLogger(__name__)
@@ -158,14 +157,17 @@ def arxiv_lock():
 
 
 def sync_arxiv(since: date | None = None, until: date | None = None) -> dict[str, tuple[int, int]]:
-    """Harvest every configured category; returns {category: (inserted, updated)}.
+    """Harvest every category to sync (agent.arxiv_state: the web's, else config.yaml's);
+    returns {category: (inserted, updated)}.
 
     Without arguments this continues from sync_state. `since`/`until` select records by the
     day they were last modified on arXiv; a run with `until` is a backfill and leaves
     sync_state alone.
     """
+    with Session(engine()) as session:
+        categories = agent.arxiv_state(session)["categories"]
     result = {}
-    for category in config().arxiv.categories:
+    for category in categories:
         source = f"arxiv:{category}"
         with Session(engine()) as session:
             state = session.get(SyncState, source)

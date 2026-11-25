@@ -8,6 +8,7 @@ import { Avatar, AvatarPicker } from './Avatar'
 import { KeySpot } from './Illustrations'
 import { pageIn } from './motion'
 import { Section, Skeleton } from './ui'
+import { WelcomeAgain } from './Welcome'
 
 interface Me {
   username: string
@@ -253,6 +254,7 @@ export default function Profile() {
                 return <li key={label}>{href ? <a href={href} className="group/tile block">{inner}</a> : inner}</li>
               })}
             </ul>
+            <WelcomeAgain className="mt-8 text-sm text-clay-ink hover:underline" />
           </m.div>
         ) : (
           <div className="mx-auto w-1/2 min-w-40">

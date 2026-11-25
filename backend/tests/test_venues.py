@@ -488,14 +488,15 @@ def test_editions_one_after_another(session, monkeypatch):
     queued, _ = _queues(monkeypatch)
     with Session(engine()) as s, s.begin():
         s.add(SyncState(source="venue:CVPR:2025", cursor=date.today()))  # imported to the end
-    plan = venues.editions(2025, 2026, ["CVPR", "ICCV"])
-    assert plan == [("CVPR", 2026), ("ICCV", 2026), ("ICCV", 2025)]  # newest first
+    plan = venues.editions(2024, 2026, ["CVPR", "ICCV"])
+    # newest first; without CVPR 2025, imported, and ICCV 2024 and 2026: it is held in odd years
+    assert plan == [("CVPR", 2026), ("ICCV", 2025), ("CVPR", 2024)]
 
     with pytest.raises(venues.ImportFailed):  # a failed edition still hands on to the next
         jobs.import_job(*plan[0], then=[list(e) for e in plan[1:]])
-    assert queued[-1] == (("ICCV", 2026), {"briefs": True, "then": [["ICCV", 2025]]})
-    assert jobs.import_job("ICCV", 2026, then=[["ICCV", 2025]])["status"] == "not_published"
-    assert queued[-1] == (("ICCV", 2025), {"briefs": True, "then": []})
+    assert queued[-1] == (("ICCV", 2025), {"briefs": True, "then": [["CVPR", 2024]]})
+    assert jobs.import_job("ICCV", 2027, then=[["CVPR", 2024]])["status"] == "not_published"
+    assert queued[-1] == (("CVPR", 2024), {"briefs": True, "then": []})
 
     # trying a source with a limit does not count as having imported the edition
     _expect_few(monkeypatch, "CVPR")

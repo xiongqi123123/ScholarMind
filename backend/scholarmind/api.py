@@ -21,7 +21,7 @@ from pydantic import (
     StringConstraints,
     field_validator,
 )
-from sqlalchemy import text
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -76,19 +76,30 @@ class MeIn(BaseModel):
     avatar: Annotated[str, StringConstraints(pattern=r"^[a-z]+-[a-z]+$", max_length=32)] | None
 
 
+Username = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[A-Za-z0-9._-]+$"
+    ),
+]
+Email = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, to_lower=True, max_length=254, pattern=auth.EMAIL),
+]
+NewPassword = Annotated[str, Field(min_length=auth.MIN_PASSWORD, max_length=1024)]
+
+
 class UserIn(BaseModel):
-    username: Annotated[
-        str,
-        StringConstraints(
-            strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[A-Za-z0-9._-]+$"
-        ),
-    ]
-    email: Annotated[
-        str,
-        StringConstraints(strip_whitespace=True, to_lower=True, max_length=254, pattern=auth.EMAIL),
-    ]
-    password: str = Field(min_length=auth.MIN_PASSWORD, max_length=1024)
+    username: Username
+    email: Email
+    password: NewPassword
     is_admin: bool = False
+
+
+class FirstAdminIn(BaseModel):
+    username: Username
+    password: NewPassword
+    email: Email | None = None
 
 
 class RoleIn(BaseModel):
@@ -167,6 +178,41 @@ class ConnectionState(ApiKeyState):
 class AgentSettings(ApiKeyState):
     model: ModelSettings
     prompts: list[PromptOut]
+
+
+class SetupState(BaseModel):
+    done: bool  # an admin finished the first-run setup
+    papers: int  # in the library
+
+
+class ArxivIn(BaseModel):
+    categories: list[Annotated[str, Field(max_length=64)]]  # checked by agent
+
+
+class ArxivState(BaseModel):
+    categories: list[str]
+    source: Literal["web", "config"]
+
+
+class VenueOut(BaseModel):
+    name: str
+    every: int  # years between editions
+    papers_per_edition: int  # about
+    years: list[int]  # editions imported to the end, newest first
+
+
+class ImportIn(BaseModel):
+    venues: list[Annotated[str, Field(max_length=64)]]  # names as GET /api/admin/venues has them
+    since: int  # a year, up to this one
+    briefs: bool = True  # False: hold the papers out of briefs (--no-briefs)
+    dry_run: bool = False  # only say what would be queued
+
+
+class ImportPlan(BaseModel):
+    editions: list[tuple[str, int]]  # (venue, year), newest first, in the order they run
+    papers: int  # about
+    tokens: int  # their briefs, about; 0 without briefs
+    queued: bool
 
 
 class TokenIn(BaseModel):
@@ -530,6 +576,24 @@ def logout(response: Response):
     return {"status": "ok"}
 
 
+@public.get("/setup/status")
+def setup_status(session: DbSession):
+    """Whether a new deployment still needs its first admin: there is no account at all."""
+    return {"needs_admin": not auth.has_users(session)}
+
+
+@public.post("/setup/admin")
+def setup_admin(body: FirstAdminIn, response: Response, session: DbSession):
+    """The first account, an admin, signed in at once as by /api/login. Open to anyone, but
+    only until there is an account: then 409.
+    """
+    user = auth.add_first_admin(session, body.username, body.password, body.email)
+    if user is None:
+        raise HTTPException(409, "There is an account already: sign in")
+    _start_session(response, user)
+    return {"username": user.username, "is_admin": True}
+
+
 @private.get("/me", response_model=Me)
 def me(user: CurrentUser):
     return {
@@ -731,6 +795,82 @@ def reset_prompt(key: PromptKey, session: DbSession, admin: WebAdmin):
     """The default prompt (its file) again."""
     agent.reset_prompt(session, key)
     return agent.prompt_state(session, key)
+
+
+@private.get("/admin/setup", response_model=SetupState)
+def setup_state(session: DbSession, admin: WebAdmin):
+    """The web app leads an admin through the first-run setup while it is not done and the
+    library is empty.
+    """
+    papers = session.scalar(select(func.count()).select_from(Paper))
+    return {"done": agent.setup_done(session), "papers": papers}
+
+
+@private.put("/admin/setup/done", status_code=204)
+def finish_setup(session: DbSession, admin: WebAdmin):
+    agent.finish_setup(session, admin)
+
+
+@private.get("/admin/arxiv", response_model=ArxivState)
+def arxiv_categories(session: DbSession, admin: WebAdmin):
+    """The arXiv categories the daily sync harvests, and whether set here or in config.yaml."""
+    return agent.arxiv_state(session)
+
+
+@private.put("/admin/arxiv", response_model=ArxivState)
+def set_arxiv_categories(body: ArxivIn, session: DbSession, admin: WebAdmin):
+    """Overrides config.yaml from the next sync on. A category new to the sync starts a few
+    days back (ingest.FIRST_SYNC_DAYS).
+    """
+    try:
+        agent.set_arxiv_categories(session, body.categories, admin)
+    except agent.InvalidSetting as e:
+        raise HTTPException(422, str(e)) from None
+    return agent.arxiv_state(session)
+
+
+@private.delete("/admin/arxiv", response_model=ArxivState)
+def reset_arxiv_categories(session: DbSession, admin: WebAdmin):
+    """config.yaml's categories again."""
+    agent.reset_arxiv_categories(session, admin)
+    return agent.arxiv_state(session)
+
+
+@private.post("/admin/sync", status_code=202)
+def sync_now(admin: WebAdmin):
+    """Queue an arXiv sync now, as the daily one: from where the last one got to."""
+    return {"job": jobs.enqueue_sync().id}
+
+
+@private.get("/admin/venues", response_model=list[VenueOut])
+def list_venues(session: DbSession, admin: WebAdmin):
+    """The conferences, as config.yaml orders them, with the editions imported."""
+    imported = venues.imported(session)
+    return [
+        {"name": name, "every": venue.every, "papers_per_edition": venue.papers_per_edition}
+        | {"years": imported.get(name, [])}
+        for name, venue in config().venues.items()
+    ]
+
+
+@private.post("/admin/venues/import", response_model=ImportPlan)
+def import_venues(body: ImportIn, admin: WebAdmin):
+    """Queue the editions of these venues from `since` to this year that are not imported yet,
+    one after another, newest first, as `scholarmind import-venues` does; dry_run only says
+    what that would be. papers and tokens are rough (venues.estimate).
+    """
+    this_year = date.today().year
+    if unknown := [name for name in body.venues if name not in config().venues]:
+        raise HTTPException(422, f"No venue {', '.join(unknown)}: {', '.join(config().venues)}")
+    if not 2000 <= body.since <= this_year:
+        raise HTTPException(422, f"since must be a year from 2000 to {this_year}")
+    plan, job = [], None
+    if body.venues:  # none: nothing, where the command line takes all
+        names = [name for name in config().venues if name in body.venues]
+        plan, job = jobs.import_venues(body.since, this_year, names, body.briefs, body.dry_run)
+    papers = venues.estimate(plan)
+    tokens = papers * venues.BRIEF_TOKENS if body.briefs else 0
+    return {"editions": plan, "papers": papers, "tokens": tokens, "queued": job is not None}
 
 
 @private.get("/me/tokens", response_model=list[TokenOut])

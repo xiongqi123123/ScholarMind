@@ -163,16 +163,12 @@ flowchart LR
 ```bash
 git clone https://github.com/xiongqi123123/ScholarMind.git && cd ScholarMind
 cp .env.example .env                 # 数据库和 Redis 连接、SECRET_KEY、LLM_API_KEY
-cp config.example.yaml config.yaml   # arXiv 类别、同步时间、模型接口地址和模型名
+cp config.example.yaml config.yaml   # 同步时间、模型接口地址和模型名
 
 docker build -t scholarmind .
 
 # 建表
 docker run --rm --env-file .env -v ./config.yaml:/app/config.yaml:ro scholarmind alembic upgrade head
-
-# 建第一个管理员（会提示输入密码）
-docker run --rm -it --env-file .env -v ./config.yaml:/app/config.yaml:ro scholarmind \
-  scholarmind create-user alice --admin
 
 # 启动
 docker run -d --name scholarmind --restart always -p 8000:8000 \
@@ -180,13 +176,21 @@ docker run -d --name scholarmind --restart always -p 8000:8000 \
   scholarmind
 ```
 
-打开 `http://<主机>:8000` 登录。之后每天到 `config.yaml` 里 `sync.cron` 的时间，会自动同步 arXiv 并给新论文打标签。想马上看到数据：
+打开 `http://<主机>:8000`，先建第一个管理员账号，然后跟着初始化向导走完：连上模型接口，选 arXiv 类别，选要导入的顶会和起始年份（会给出预计篇数和打标签的 token），最后开始同步。之后每天到 `config.yaml` 里 `sync.cron` 的时间，会自动同步 arXiv 并给新论文打标签。
+
+库里还没有任何账号时，谁打开这个页面都能建第一个管理员，所以容器起来后尽快建好。
+
+<details>
+<summary><b>也可以用命令行</b></summary>
 
 ```bash
+docker exec -it scholarmind scholarmind create-user alice --admin  # 建管理员（会提示输入密码）
 docker exec scholarmind scholarmind sync                           # 现在就同步一次 arXiv
 docker exec scholarmind scholarmind import-venue CVPR 2026         # 导入一届会议
 docker exec scholarmind scholarmind import-venues --since 2022     # 排队导入 2022 年起的各届
 ```
+
+</details>
 
 <details>
 <summary><b>部署时要知道的几件事</b></summary>
@@ -195,7 +199,7 @@ docker exec scholarmind scholarmind import-venues --since 2022     # 排队导�
 - 通过 HTTPS 提供服务时把 `.env` 里的 `COOKIE_SECURE` 设为 `true`，前面放任意反向代理即可。问答是流式输出（SSE），反向代理不要缓冲响应。
 - 内存：api 约 60 MB，每个 analyze worker 工作时约 150 MB，写解读时约 400 MB。`ANALYZE_WORKERS` 按机器内存和模型接口允许的并发定；接口限流时任务会自己等待。
 - 仓库里目前没有 docker compose 文件。想让 CI 在检查通过后自动部署到一台 Docker 主机（构建、迁移、切换、失败回滚），脚本和说明在 [deploy/](deploy/README.md)。
-- 这个服务按内网使用设计：没有注册入口，账号由管理员创建，所有接口都要登录或令牌。放到公网前请自己评估。
+- 这个服务按内网使用设计：没有注册入口，账号由管理员创建，除了建第一个管理员（只在一个账号都没有时开放），所有接口都要登录或令牌。放到公网前请自己评估。
 
 </details>
 
@@ -205,13 +209,13 @@ docker exec scholarmind scholarmind import-venues --since 2022     # 排队导�
 
 | 段落 | 内容 |
 | --- | --- |
-| `arxiv` | 每天同步哪些类别 |
+| `arxiv` | 每天同步哪些类别；管理员在网页上选过的话以网页为准 |
 | `sync` | 每日同步、每周会议检查的时间 |
 | `venues` | 调整或增删内置的会议 |
 | `vocabulary` | 领域和起步的方向词表；不写就用内置的（计算机视觉、自然语言处理、机器人、具身智能、自动驾驶，68 个方向） |
 | `analysis` | 模型接口地址、打标签和写解读各用的模型、每批篇数、自动写解读的方向和每日上限、输出语言 |
 
-`.env` 放连接串和密钥，不进仓库。模型接口地址、密钥、模型名和六个提示词（打标签、解读、创新性质、方向合并、问答、摘要翻译）也可以由管理员在网页上改，改完从下一个任务起生效，不用重启；在网页上设的密钥加密后存库。
+`.env` 放连接串和密钥，不进仓库。arXiv 类别、模型接口地址、密钥、模型名和六个提示词（打标签、解读、创新性质、方向合并、问答、摘要翻译）也可以由管理员在网页上改，改完从下一个任务起生效，不用重启；网页上设了的以网页为准，恢复默认就回到 `config.yaml` 和 `.env` 的值。在网页上设的密钥加密后存库。
 
 ## 成本
 

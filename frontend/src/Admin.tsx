@@ -2,21 +2,22 @@ import { Braces, Check, ChevronDown, X } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
 import * as m from 'motion/react-m'
 import { Dialog, DropdownMenu } from 'radix-ui'
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { ApiError, day, invalidate, send, useApi } from './api'
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { ApiError, day, invalidate, mutate, saveArxiv, sameCategories, send, useApi, type Arxiv } from './api'
 import { ask } from './ask'
 import { Avatar } from './Avatar'
 import { RailGroup } from './Facets'
-import { AgentSpot, BookSpot, BulbSpot, GlobeSpot, MergeSpot, PaperPlane, PeopleSpot, TagSpot } from './Illustrations'
+import { AgentSpot, BookSpot, BulbSpot, GlobeSpot, MergeSpot, PaperPlane, PeopleSpot, StackSpot, TagSpot } from './Illustrations'
 import { pageIn } from './motion'
 import { Notice, Section, Skeleton } from './ui'
 
 const ADMIN_PAGES = [
   ['/admin/agent', 'Agent 配置', AgentSpot],
   ['/admin/users', '账户管理', PeopleSpot],
+  ['/admin/sources', '数据源', StackSpot],
 ] as const
 
-/** The console's two pages in the rail, each with its own small drawing. */
+/** The console's pages in the rail, each with its own small drawing. */
 function AdminNav({ path }: { path: string }) {
   return (
     <RailGroup title="管理后台" open>
@@ -42,7 +43,7 @@ function AdminNav({ path }: { path: string }) {
   )
 }
 
-/** The admin console's frame, as the profile's: its two pages in the left quarter's rail, the
+/** The admin console's frame, as the profile's: its pages in the left quarter's rail, the
  * page in the paper column. A member who finds the address, or an admin made a member while
  * here (denied: the page's request got a 403), sees a note instead. */
 function AdminFrame({ path, denied, children }: { path: string; denied?: boolean; children: ReactNode }) {
@@ -140,6 +141,18 @@ const Act = ({ danger, onClick, disabled, children }: { danger?: boolean; onClic
 const Status = ({ error, done }: { error?: string; done?: string }) =>
   error || done ? <p role="status" className={`mt-2 text-sm ${error ? 'text-clay-ink' : 'text-stone'}`}>{error ?? done}</p> : null
 
+/** An on/off switch, its words after it. */
+function Switch({ checked, onChange, children }: { checked: boolean; onChange: (on: boolean) => void; children: ReactNode }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="group flex items-center gap-2 rounded-full text-sm text-ink-soft">
+      <span className="relative h-5 w-9 shrink-0 rounded-full bg-line transition-colors duration-(--duration-base) group-aria-checked:bg-clay">
+        <span className="absolute top-0.5 left-0.5 size-4 rounded-full bg-paper-raised shadow-sm transition-transform duration-(--duration-base) group-aria-checked:translate-x-4" />
+      </span>
+      {children}
+    </button>
+  )
+}
+
 // ───────────────────────────── Agent ─────────────────────────────
 
 interface Prompt {
@@ -157,7 +170,7 @@ interface Setting {
   source: 'web' | 'config'
 }
 
-interface Agent {
+export interface Agent {
   api_key_set: boolean
   api_key_hint: string | null // "…wxyz"
   api_key_source: 'web' | 'env' | null
@@ -213,10 +226,11 @@ const origin = (url?: string) => {
 /** The connection (where requests go and the key they carry) is one thing: a row with both, tried
  * (检测) as it is, or changed in one form where the new pair can be tried before it is saved.
  * The key may be left empty only on the same host (only the path changes): the backend never
- * sends the current key elsewhere. 删除 goes back to the deployment's pair. */
-function Connection({ agent, children }: { agent: Agent; children?: ReactNode }) {
-  const [editing, setEditing] = useState(false)
-  const [draftUrl, setDraftUrl] = useState('')
+ * sends the current key elsewhere. 删除 goes back to the deployment's pair. `edit` opens the form
+ * at once (no key yet). */
+function Connection({ agent, edit = false, children }: { agent: Agent; edit?: boolean; children?: ReactNode }) {
+  const [editing, setEditing] = useState(edit)
+  const [draftUrl, setDraftUrl] = useState(edit ? (agent.model?.base_url.value ?? '') : '')
   const [probe, setProbe] = useState<{ busy?: boolean; found?: number; error?: string }>({})
   const [state, setState] = useState<{ busy?: boolean; error?: string; done?: string }>({})
   const url = agent.model?.base_url
@@ -437,8 +451,9 @@ function ModelOption({ name, label, about, setting, models }: { name: string; la
 }
 
 /** The model's connection and the two models chosen on it. The models offered are detected from
- * the connection in use, again whenever it changes. */
-function ModelPart({ agent }: { agent: Agent }) {
+ * the connection in use, again whenever it changes; `onModels` hears what was found (the list, or
+ * why there is none; undefined while detecting). Also the setup wizard's first step. */
+export function Models({ agent, edit, onModels }: { agent: Agent; edit?: boolean; onModels?: (models?: string[] | string) => void }) {
   const [models, setModels] = useState<{ for: string; list: string[] | string }>()
   const conn = `${agent.model?.base_url.value}|${agent.api_key_hint}`
   useEffect(() => {
@@ -452,17 +467,24 @@ function ModelPart({ agent }: { agent: Agent }) {
     }
   }, [conn])
   const list = models?.for === conn ? models.list : undefined
+  useEffect(() => onModels?.(list), [list, onModels])
+  return (
+    <Connection agent={agent} edit={edit}>
+      {agent.model && (
+        <>
+          <ModelOption name="brief_model" label="打标模型" about="摘要与打标" setting={agent.model.brief_model} models={list} />
+          <ModelOption name="report_model" label="解读模型" about="论文解读与创新评估" setting={agent.model.report_model} models={list} />
+        </>
+      )}
+    </Connection>
+  )
+}
+
+function ModelPart({ agent }: { agent: Agent }) {
   return (
     <Section id="model" title="模型接口">
       <p className="-mt-3 mb-4 text-sm text-stone">下一个任务起生效。改 Base URL 后，之后的请求会带着 API Key 发到新地址。</p>
-      <Connection agent={agent}>
-        {agent.model && (
-          <>
-            <ModelOption name="brief_model" label="打标模型" about="摘要与打标" setting={agent.model.brief_model} models={list} />
-            <ModelOption name="report_model" label="解读模型" about="论文解读与创新评估" setting={agent.model.report_model} models={list} />
-          </>
-        )}
-      </Connection>
+      <Models agent={agent} />
     </Section>
   )
 }
@@ -845,6 +867,492 @@ export function UsersPage() {
           <p className="text-sm text-stone">{users.error ?? '加载中…'}</p>
         )}
         <Status {...state} />
+      </Section>
+    </AdminFrame>
+  )
+}
+
+// ───────────────────────────── Sources ─────────────────────────────
+
+/** A conference that can be imported: an edition every `every` years of about
+ * `papers_per_edition` papers; `years`, the editions in the library, newest first. */
+interface Venue {
+  name: string
+  every: number
+  papers_per_edition: number
+  years: number[]
+}
+
+/** What an import takes (dry_run) or was queued: the editions not in the library yet, and roughly
+ * their papers and the tokens tagging them takes (0 without tagging). */
+interface Plan {
+  editions: [string, number][]
+  papers: number
+  tokens: number
+  queued: boolean
+}
+
+/** /api/sources: papers per source (arXiv or a conference) and year. */
+interface SourceCount {
+  source: string
+  year: number | null
+  papers: number
+}
+
+/** The usual categories, with what they cover. */
+const CATEGORIES: [string, string][] = [
+  ['cs.CV', '计算机视觉'],
+  ['cs.RO', '机器人'],
+  ['cs.CL', '自然语言处理'],
+  ['cs.LG', '机器学习'],
+  ['cs.AI', '人工智能'],
+  ['cs.IR', '信息检索'],
+  ['cs.HC', '人机交互'],
+  ['cs.MA', '多智能体'],
+  ['cs.GR', '图形学'],
+  ['cs.SD', '声音'],
+  ['cs.CR', '密码与安全'],
+  ['cs.NE', '神经与演化计算'],
+  ['eess.IV', '图像与视频处理'],
+  ['eess.AS', '音频与语音'],
+  ['eess.SY', '系统与控制'],
+  ['stat.ML', '统计机器学习'],
+  ['math.OC', '优化与控制'],
+]
+const MAX_CATEGORIES = 20 // as the backend
+/** How arXiv writes a category: cs.CV, math.OC, hep-th, astro-ph.GA (the backend checks again). */
+const CATEGORY = /^[a-z]+(-[a-z]+)?(\.[A-Za-z]+(-[A-Za-z]+)?)?$/
+
+const chip = 'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors duration-(--duration-fast)'
+const chipOn = 'border-clay bg-clay-wash text-clay-ink'
+
+/** The arXiv categories to sync: the usual ones as switches (with what they cover), any other
+ * typed in and shown after them with a × to drop it. Also the setup wizard's second step. */
+export function ArxivPicker({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const [error, setError] = useState('')
+  const full = value.length >= MAX_CATEGORIES
+  const others = value.filter((c) => !CATEGORIES.some(([k]) => k === c))
+
+  function add(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    // arXiv's own case, which the backend insists on: the archive in lower case, a two-letter
+    // subject class in upper case (CS.cv is cs.CV); longer ones (physics.optics) are lower case.
+    const [archive, sub] = String(new FormData(form).get('category') ?? '').trim().split(/\.(.*)/)
+    const c = sub === undefined ? archive.toLowerCase() : `${archive.toLowerCase()}.${sub.length === 2 ? sub.toUpperCase() : sub.toLowerCase()}`
+    if (!CATEGORY.test(c)) return setError('要像 cs.CV、math.OC、hep-th 这样写')
+    if (value.includes(c)) return setError(`${c} 已经选了`)
+    if (full) return setError(`最多 ${MAX_CATEGORIES} 个`)
+    onChange([...value, c])
+    form.reset()
+    setError('')
+  }
+
+  return (
+    <div>
+      <ul className="flex flex-wrap gap-2" aria-label="arXiv 类别">
+        {CATEGORIES.map(([c, zh]) => {
+          const on = value.includes(c)
+          return (
+            <li key={c}>
+              <button
+                type="button"
+                aria-pressed={on}
+                disabled={!on && full}
+                onClick={() => onChange(on ? value.filter((x) => x !== c) : [...value, c])}
+                className={`${chip} ${on ? chipOn : 'border-line bg-paper-raised text-ink-soft enabled:hover:border-clay enabled:hover:text-clay-ink'} disabled:opacity-40`}
+              >
+                {on && <Check size={14} strokeWidth={2} />}
+                <span className="font-mono text-xs">{c}</span>
+                {zh}
+              </button>
+            </li>
+          )
+        })}
+        {others.map((c) => (
+          <li key={c} className={`${chip} ${chipOn} pr-1.5`}>
+            <span className="font-mono text-xs">{c}</span>
+            <button type="button" aria-label={`去掉 ${c}`} onClick={() => onChange(value.filter((x) => x !== c))} className="grid size-5 place-items-center rounded-full hover:bg-clay/15">
+              <X size={12} strokeWidth={2} />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={add} className="mt-4 flex max-w-form gap-2">
+        <label className="field flex-1">
+          <input
+            name="category"
+            maxLength={32}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="其他类别，如 hep-th"
+            aria-label="其他 arXiv 类别"
+            className="font-mono text-sm"
+            onInput={() => error && setError('')}
+          />
+        </label>
+        <button className="btn-quiet" disabled={full}>
+          添加
+        </button>
+      </form>
+      <p role="status" className={`mt-2 text-sm ${error || !value.length ? 'text-clay-ink' : 'text-stone'}`}>
+        {error || (value.length ? `已选 ${value.length} 个` : '至少选一个')}
+      </p>
+    </div>
+  )
+}
+
+/** Which field each built-in conference is in, to find one's own at a glance. */
+const FIELDS: Record<string, string> = {
+  NeurIPS: '机器学习',
+  ICLR: '机器学习',
+  ICML: '机器学习',
+  CVPR: '视觉',
+  ICCV: '视觉',
+  ECCV: '视觉',
+  ICRA: '机器人',
+  IROS: '机器人',
+  RSS: '机器人',
+  ACL: '语言',
+  EMNLP: '语言',
+  AAAI: '人工智能',
+  'ACM MM': '多媒体',
+}
+const THIS_YEAR = new Date().getFullYear()
+const FIRST_YEAR = 2000 // as the backend
+const LARGE = 30_000_000 // tokens (~30,000 papers): past this the estimate stands out and 开始导入 asks first
+const count = new Intl.NumberFormat('zh-CN')
+const compact = new Intl.NumberFormat('zh-CN', { notation: 'compact', maximumFractionDigits: 1 }) // 1230000 → 123万
+
+const cadence = (every: number) => (every === 1 ? '每年一届' : every === 2 ? '两年一届' : `${every} 年一届`)
+
+/** "CVPR 2025、2024；ICCV 2025": editions by conference. */
+function editionList(editions: [string, number][]) {
+  const by = new Map<string, number[]>()
+  for (const [name, year] of editions) by.set(name, [...(by.get(name) ?? []), year])
+  return [...by].map(([name, years]) => `${name} ${years.join('、')}`).join('；')
+}
+
+const venueError = (err: unknown) => (err instanceof ApiError && err.status === 422 ? '会议名或起始年份不对' : (err as Error).message)
+
+const YEARS = Array.from({ length: THIS_YEAR - FIRST_YEAR + 1 }, (_, i) => THIS_YEAR - i)
+
+/** The year to start from, newest first, chosen as the models are: a menu, the year set ticked and,
+ * when it opens, scrolled to and focused, so the arrow keys go on from there. */
+function YearPicker({ value, onChange }: { value: number; onChange: (year: number) => void }) {
+  // Stable, so it runs as the menu opens (after the menu has focused itself), not on every render.
+  const current = useCallback((el: HTMLDivElement | null) => {
+    if (el)
+      requestAnimationFrame(() => {
+        el.focus({ preventScroll: true })
+        el.scrollIntoView({ block: 'center' })
+      })
+  }, [])
+  return (
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger aria-label={`起始年份：${value}`} className="group field h-9 gap-1 px-2 tabular-nums data-[state=open]:border-clay">
+        {value}
+        <ChevronDown size={14} strokeWidth={1.75} className="text-stone transition-transform duration-(--duration-base) group-data-[state=open]:rotate-180" />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content align="start" sideOffset={6} collisionPadding={16} className="popover max-h-64 min-w-28 overflow-y-auto p-1 data-[state=open]:animate-fade">
+          <DropdownMenu.RadioGroup value={String(value)} onValueChange={(v) => onChange(Number(v))}>
+            {YEARS.map((y) => (
+              <DropdownMenu.RadioItem key={y} ref={y === value ? current : undefined} value={String(y)} className="option tabular-nums">
+                {y}
+                <DropdownMenu.ItemIndicator>
+                  <Check size={14} strokeWidth={2} className="text-clay" />
+                </DropdownMenu.ItemIndicator>
+              </DropdownMenu.RadioItem>
+            ))}
+          </DropdownMenu.RadioGroup>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  )
+}
+
+/** What VenueImport hands a layout of its own: the form, the estimate (in its box), whether anything
+ * is ticked, the plan for it (none while the estimate is on its way), and `queue`, which asks first
+ * about a large one and resolves to what was queued, or nothing when that is declined. */
+interface ImportParts {
+  form: ReactNode
+  estimate: ReactNode
+  ticked: boolean
+  plan?: Plan
+  queue: () => Promise<Plan | undefined>
+}
+
+/** Conferences to import, a box each with what of it is in the library (editions and papers), the
+ * year to start from and whether to tag what comes in. A moment after every change the backend says
+ * what the import would take (editions already in are skipped), in a bar that stays in view while
+ * boxes are ticked; a large one stands out. 开始导入 queues it, one edition after another.
+ * `children` lays it out instead (the setup wizard: the estimate in its own bar, its button queuing). */
+export function VenueImport({ children }: { children?: (parts: ImportParts) => ReactNode }) {
+  const venues = useApi<Venue[]>('/admin/venues')
+  const sources = useApi<SourceCount[]>('/sources')
+  const [picked, setPicked] = useState<string[]>([])
+  const [since, setSince] = useState(THIS_YEAR - 1)
+  const [briefs, setBriefs] = useState(true)
+  const [estimate, setEstimate] = useState<{ key: string; plan?: Plan; error?: string }>()
+  const [state, setState] = useState<{ busy?: boolean; error?: string; done?: string }>({})
+  const key = picked.length ? JSON.stringify({ venues: picked, since, briefs }) : null
+
+  useEffect(() => {
+    if (!key) return
+    let live = true
+    const timer = setTimeout(
+      () =>
+        send<Plan>('POST', '/admin/venues/import', { ...JSON.parse(key), dry_run: true }).then(
+          (plan) => live && setEstimate({ key, plan }),
+          (err) => live && setEstimate({ key, error: venueError(err) }),
+        ),
+      400,
+    )
+    return () => {
+      live = false
+      clearTimeout(timer)
+    }
+  }, [key])
+
+  // While a new estimate is on its way the last one stays, dimmed.
+  const stale = estimate?.key !== key
+  const plan = key ? estimate?.plan : undefined
+  const large = briefs && !!plan && plan.tokens >= LARGE
+
+  function pick(next: string[]) {
+    setPicked(next)
+    setState({})
+  }
+
+  async function queue() {
+    if (!key || !plan || stale) return
+    if (
+      large &&
+      !(await ask({
+        title: `导入 ${plan.editions.length} 届、约 ${count.format(plan.papers)} 篇？`,
+        body: `打标签约 ${compact.format(plan.tokens)} token，按模型的价格计费。导入在后台一届一届进行，可能要好几天。`,
+        action: '开始导入',
+      }))
+    )
+      return
+    try {
+      const done = await send<Plan>('POST', '/admin/venues/import', { ...JSON.parse(key), dry_run: false })
+      pick([])
+      invalidate('/admin/venues', '/sources')
+      return done
+    } catch (err) {
+      throw new Error(venueError(err), { cause: err })
+    }
+  }
+
+  async function start() {
+    setState({ busy: true })
+    try {
+      const done = await queue()
+      setState(
+        done ? { done: done.queued ? `已开始导入 ${done.editions.length} 届、约 ${count.format(done.papers)} 篇，在后台一届一届进行` : '所选的届都已在库里，没有要导入的' } : {},
+      )
+    } catch (err) {
+      setState({ error: (err as Error).message })
+    }
+  }
+
+  const papersIn = (name: string, year: number) => sources.data?.find((s) => s.source === name && s.year === year)?.papers
+  const form = !venues.data ? (
+    venues.error ? (
+      <p className="text-sm text-clay-ink">{venues.error}</p>
+    ) : (
+      <Skeleton rows={2} />
+    )
+  ) : (
+    <>
+      <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ink-soft">
+        <div className="flex items-center gap-2">
+          从
+          <YearPicker value={since} onChange={setSince} />
+          年起
+        </div>
+        <Switch checked={briefs} onChange={setBriefs}>
+          导入后自动打标签
+        </Switch>
+      </div>
+      {!briefs && <p className="-mt-1 mb-4 text-xs text-stone">关掉后论文只进库、先不打标签，之后可以用命令 scholarmind release-held 补打。</p>}
+      <ul className="grid border-t border-line sm:grid-cols-2 sm:gap-x-8">
+        {venues.data.map((v) => {
+          const on = picked.includes(v.name)
+          return (
+            <li key={v.name} className="border-b border-line">
+              <label className="group/venue flex cursor-pointer items-start gap-3 py-3">
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => pick(on ? picked.filter((x) => x !== v.name) : [...picked, v.name])}
+                  className="mt-0.5 size-4 shrink-0 cursor-pointer accent-clay"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-sm font-medium text-ink transition-colors duration-(--duration-fast) group-hover/venue:text-clay-ink">
+                    {v.name}
+                    {FIELDS[v.name] && <Tag>{FIELDS[v.name]}</Tag>}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-stone">
+                    {cadence(v.every)} · 每届约 {count.format(v.papers_per_edition)} 篇
+                  </span>
+                  <span className="mt-0.5 block text-xs text-stone">
+                    {v.years.length
+                      ? '已导入 ' + v.years.map((y) => (papersIn(v.name, y) === undefined ? y : `${y}（${count.format(papersIn(v.name, y)!)} 篇）`)).join('、')
+                      : '还没导入'}
+                  </span>
+                </span>
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+    </>
+  )
+
+  // The estimate in its box, a large one in clay; the sources page puts 开始导入 in it too.
+  const estimateBox = (button?: ReactNode) => (
+    <div
+      className={`flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border px-4 py-3 text-left transition-colors duration-(--duration-base) ${large ? 'border-clay/50 bg-clay-wash' : 'border-line bg-paper-raised'}`}
+    >
+      <div className={`min-w-0 flex-1 transition-opacity duration-(--duration-base) ${key && stale ? 'opacity-60' : ''}`}>
+        {!key ? (
+          <p className="text-sm text-stone">勾选会议，这里估算要导入多少</p>
+        ) : !plan ? (
+          <p className={`text-sm ${estimate?.error && !stale ? 'text-clay-ink' : 'text-stone'}`}>{!stale && estimate?.error ? estimate.error : '正在估算…'}</p>
+        ) : plan.editions.length ? (
+          <>
+            <p className="text-sm text-ink tabular-nums">
+              共 <b className="font-semibold">{plan.editions.length}</b> 届、约 <b className="font-semibold">{count.format(plan.papers)}</b> 篇
+              {briefs ? (
+                <>
+                  ，打标签约 <b className={`font-semibold ${large ? 'text-clay-ink' : ''}`}>{compact.format(plan.tokens)}</b> token
+                </>
+              ) : (
+                '，只导入不打标签'
+              )}
+            </p>
+            <p className="mt-0.5 line-clamp-2 text-xs text-stone">{editionList(plan.editions)}</p>
+            {large && <p className="mt-1 text-xs text-clay-ink">量比较大：打标签按模型价格计费，导入在后台一届一届进行，可能要好几天。</p>}
+          </>
+        ) : (
+          <p className="text-sm text-stone">{since} 年以来这些会议的届都已在库里</p>
+        )}
+      </div>
+      {button}
+    </div>
+  )
+
+  if (children) return children({ form, estimate: estimateBox(), ticked: !!key, plan: stale ? undefined : plan, queue })
+  if (!venues.data) return form
+  return (
+    <div>
+      {form}
+      <div aria-live="polite" className="sticky bottom-0 z-10 -mx-1 bg-paper/90 px-1 py-4 backdrop-blur-sm">
+        {estimateBox(
+          <button type="button" className="btn-clay" disabled={!plan?.editions.length || stale || state.busy} onClick={start}>
+            开始导入
+          </button>,
+        )}
+      </div>
+      <Status {...state} />
+    </div>
+  )
+}
+
+/** The arXiv categories synced every day: changed here and saved with 保存, back to the
+ * deployment's with 恢复部署配置; 立即同步 fetches the latest announcement now rather than at the
+ * next daily sync. */
+function ArxivPart({ arxiv, papers }: { arxiv: Arxiv; papers?: number }) {
+  const [cats, setCats] = useState(arxiv.categories)
+  const [state, setState] = useState<{ busy?: boolean; error?: string; done?: string }>({})
+  const dirty = !sameCategories(cats, arxiv.categories)
+
+  async function save() {
+    setState({ busy: true })
+    const error = await saveArxiv(cats)
+    setState(error ? { error } : { done: '已保存，下一次同步起生效' })
+  }
+
+  async function restore() {
+    if (!(await ask({ title: '改回部署配置的类别？', body: '网页上设置的类别会删除，下一次同步起改用部署时配置的。', action: '改回' }))) return
+    try {
+      const back = await send<Arxiv>('DELETE', '/admin/arxiv')
+      mutate('/admin/arxiv', back)
+      invalidate('/admin/arxiv')
+      setCats(back.categories)
+      setState({ done: `已改回部署配置：${back.categories.join('、')}` })
+    } catch (err) {
+      setState({ error: (err as Error).message })
+    }
+  }
+
+  async function sync() {
+    setState({ busy: true })
+    try {
+      await send('POST', '/admin/sync')
+      setState({ done: '已开始同步，几分钟后新论文会出现在每日新增里' })
+    } catch (err) {
+      setState({ error: (err as Error).message })
+    }
+  }
+
+  return (
+    <Section
+      id="arxiv"
+      title={
+        <>
+          arXiv
+          <span className="ml-2 align-middle font-sans">
+            <Tag clay={arxiv.source === 'web'}>{SOURCE(arxiv.source)}</Tag>
+          </span>
+        </>
+      }
+      aside={
+        <Act onClick={sync} disabled={state.busy}>
+          立即同步
+        </Act>
+      }
+    >
+      <p className="-mt-3 mb-5 text-sm text-stone">
+        每天同步这些类别新公告的论文{papers !== undefined && `，库里现有 ${count.format(papers)} 篇`}。类别越多，每天要打标签的论文越多。
+      </p>
+      <ArxivPicker value={cats} onChange={(next) => (setCats(next), setState({}))} />
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" className="btn-clay" disabled={!dirty || !cats.length || state.busy} onClick={save}>
+          保存
+        </button>
+        {dirty ? (
+          <button type="button" className="btn-quiet" onClick={() => (setCats(arxiv.categories), setState({}))}>
+            撤销修改
+          </button>
+        ) : (
+          arxiv.source === 'web' && (
+            <button type="button" className="btn-quiet" onClick={restore}>
+              恢复部署配置
+            </button>
+          )
+        )}
+      </div>
+      <Status {...state} />
+    </Section>
+  )
+}
+
+/** Where papers come from: the arXiv categories synced every day, and the conferences, with what of
+ * each is in the library and more to import. */
+export function SourcesPage() {
+  const arxiv = useApi<Arxiv>('/admin/arxiv')
+  const sources = useApi<SourceCount[]>('/sources')
+  const arxivPapers = sources.data?.filter((s) => s.source === 'arXiv').reduce((n, s) => n + s.papers, 0)
+  return (
+    <AdminFrame path="/admin/sources" denied={arxiv.error?.includes('（403）')}>
+      {arxiv.data ? <ArxivPart arxiv={arxiv.data} papers={arxivPapers} /> : arxiv.error ? <p className="text-sm text-clay-ink">{arxiv.error}</p> : <Skeleton rows={1} />}
+      <Section id="venues" title="顶会">
+        <p className="-mt-3 mb-5 text-sm text-stone">勾选要导入的会议。导入在后台一届一届进行，每导完一届，会议下面就多一个年份。</p>
+        <VenueImport />
       </Section>
     </AdminFrame>
   )

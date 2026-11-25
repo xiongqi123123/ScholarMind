@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import delete, func, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -69,6 +69,25 @@ def add_user(
     except IntegrityError as e:  # users_username_key or users_email_key
         which = "email" if "email" in (e.orig.diag.constraint_name or "") else "username"
         raise Taken(which) from None
+    return user
+
+
+def has_users(session: Session) -> bool:
+    return session.scalar(select(User.id).limit(1)) is not None
+
+
+def add_first_admin(
+    session: Session, username: str, password: str, email: str | None = None
+) -> User | None:
+    """The first account of a new deployment, an admin; None once there is any account. The
+    users table is locked against inserts first, so of two at the same moment the second waits,
+    then finds the first.
+    """
+    session.execute(text("LOCK TABLE users IN EXCLUSIVE MODE"))
+    if has_users(session):
+        return None
+    user = add_user(session, username, password, email, is_admin=True)
+    log.info("%s created as the first admin", username)
     return user
 
 

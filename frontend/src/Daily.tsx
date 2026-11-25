@@ -144,7 +144,10 @@ export default function Daily() {
   const counted = useCounts(ready && !facets ? dayQuery.toString() : null, 'domain', domainList)
   const byDomain = facets ? facets.domain.filter((d) => d.value !== 'out-of-scope').map((d) => [d.value, d.papers] as [string, number]) : counted
 
-  const current = days.data ? (data?.added_day ?? dayQuery.get('added') ?? undefined) : (dayQuery.get('date_from') ?? undefined)
+  // 'latest' is not a day: with nothing ever announced (a new deployment) the backend answers no day.
+  const asked = dayQuery.get('added')
+  const current = days.data ? (data?.added_day ?? (asked === 'latest' ? undefined : asked) ?? undefined) : (dayQuery.get('date_from') ?? undefined)
+  const none = days.data?.length === 0 && data?.added_day === null
   const at = days.data && current ? days.data.findIndex((d) => d.day === current) : -1
   const counts = at >= 0 ? days.data![at] : undefined
   const older = days.data ? days.data[at + 1]?.day : current && shift(current, -1)
@@ -209,7 +212,7 @@ export default function Daily() {
             <DayLink href={older && dailyUrl(searchParams, { day: older, domain: null })} label="前一天">
               <ChevronLeft size={18} strokeWidth={1.75} />
             </DayLink>
-            <h1 className="min-w-28 text-center font-serif text-xl font-semibold text-ink tabular-nums">{current ? label(current) : '…'}</h1>
+            <h1 className="min-w-28 text-center font-serif text-xl font-semibold text-ink tabular-nums">{current ? label(current) : none ? '每日新增' : '…'}</h1>
             <DayLink href={newer && dailyUrl(searchParams, { day: newer, domain: null })} label="后一天">
               <ChevronRight size={18} strokeWidth={1.75} />
             </DayLink>
@@ -235,7 +238,7 @@ export default function Daily() {
           <CardSkeleton />
         ) : data.items.length === 0 ? (
           <Notice art={<Yarn />}>
-            <p>{domains.length || kind ? '没有符合条件的论文' : '这一天没有新论文'}</p>
+            <p>{domains.length || kind ? '没有符合条件的论文' : none ? '还没有新论文，arXiv 同步后会出现在这里' : '这一天没有新论文'}</p>
             {(domains.length > 0 || kind) && (
               <a href={dailyUrl(searchParams, { domain: null, kind: null })} className="btn-quiet">
                 清除筛选

@@ -46,6 +46,7 @@ from scholarmind.db import (
     PaperText,
     PaperTopic,
     Setting,
+    SyncState,
     Tag,
     Token,
     Topic,
@@ -901,6 +902,154 @@ def test_probe(client, session, token, monkeypatch, caplog):
     r = probe()
     assert r.status_code == 409 and r.json() == {"detail": "No API key is set"} and asked == []
     assert "env-key-abcdefgh" not in caplog.text and "sk-llm-0123456789" not in caplog.text
+
+
+def test_first_admin(client, session):
+    """A new deployment's first account is an admin made on the web page, signed in at once.
+    Once there is any account, nobody can make one this way.
+    """
+    url = "/api/setup/admin"
+    assert client.get("/api/setup/status").json() == {"needs_admin": True}
+    new = {"username": "root", "password": "pw-root-123", "email": None}
+    for bad in [{"username": "ro ot"}, {"password": "short"}, {"email": "root@lab"}]:
+        assert client.post(url, json=new | bad).status_code == 422, bad
+    r = client.post(url, json=new | {"username": " root "})
+    assert r.status_code == 200 and r.json() == {"username": "root", "is_admin": True}
+    assert "httponly" in r.headers["set-cookie"].lower()
+    me = client.get("/api/me").json()
+    assert (me["username"], me["email"], me["is_admin"]) == ("root", None, True)
+    assert client.get("/api/admin/setup").status_code == 200  # an admin signed in on the web
+    assert client.get("/api/setup/status").json() == {"needs_admin": False}
+
+    other = TestClient(app)
+    eve = {"username": "eve", "password": "pw-eve-1234", "email": "eve@lab.org"}
+    r = other.post(url, json=eve)
+    assert r.status_code == 409 and "set-cookie" not in r.headers
+    assert other.get("/api/me").status_code == 401
+    assert session.scalars(select(User.username)).all() == ["root"]
+
+
+def test_only_one_first_admin(session):
+    """Two first admins at the same moment: the second waits for the first, then finds it."""
+    body = {"username": "ben", "password": "pw-ben-1234"}
+    with ThreadPoolExecutor(1) as pool, Session(engine()) as first, first.begin():
+        assert auth.add_first_admin(first, "ann", "pw-ann-1234").username == "ann"
+        second = pool.submit(TestClient(app).post, "/api/setup/admin", json=body)
+        time.sleep(0.5)
+        assert not second.done()  # waits for Ann's
+    assert second.result().status_code == 409
+    assert session.scalars(select(User.username)).all() == ["ann"]
+
+
+def test_admin_setup(client, session, token):
+    """An admin marks the first-run setup done, once and for all; the web app leads admins
+    through it while it is not and the library is empty. Nobody else sees or marks it.
+    """
+    admin_token = _web_admin(session, client)
+    for who, caller in _callers(token, admin_token).items():
+        expected = 401 if who == "nobody" else 403
+        assert caller.get("/api/admin/setup").status_code == expected, who
+        assert caller.put("/api/admin/setup/done").status_code == expected, who
+    assert client.get("/api/admin/setup").json() == {"done": False, "papers": 3}
+    for _ in range(2):  # again changes nothing
+        assert client.put("/api/admin/setup/done").status_code == 204
+    assert client.get("/api/admin/setup").json() == {"done": True, "papers": 3}
+
+
+def test_admin_arxiv(client, session, token, monkeypatch):
+    """An admin sets the arXiv categories the sync harvests instead of config.yaml's, until
+    they remove them, and queues a sync now; nobody else can, not even with the admin's token.
+    """
+    admin_token = _web_admin(session, client)
+    url, harvested = "/api/admin/arxiv", []
+
+    def harvest(category, since, until):
+        harvested.append(category)
+        yield [], date(2026, 11, 22)
+
+    monkeypatch.setattr(arxiv, "harvest", harvest)
+    monkeypatch.setattr(jobs, "enqueue_sync", lambda: SimpleNamespace(id="job-1"))
+    calls = [("GET", url, None), ("PUT", url, {"categories": ["cs.LG"]}), ("DELETE", url, None)]
+    for who, caller in _callers(token, admin_token).items():
+        expected = 401 if who == "nobody" else 403
+        for method, path, body in [*calls, ("POST", "/api/admin/sync", None)]:
+            assert caller.request(method, path, json=body).status_code == expected, (who, method)
+
+    configured = {"categories": ["cs.CV", "cs.RO"], "source": "config"}
+    assert client.get(url).json() == configured
+    chosen = [" cs.LG ", "math.OC", "hep-th", "cs.LG", "cond-mat.mes-hall"]
+    r = client.put(url, json={"categories": chosen})
+    web = ["cs.LG", "math.OC", "hep-th", "cond-mat.mes-hall"]  # stripped, repeats dropped
+    assert r.status_code == 200 and r.json() == {"categories": web, "source": "web"}
+    assert client.get(url).json() == r.json()
+    assert list(ingest.sync_arxiv()) == web and harvested == web
+    many = sorted(arxiv.CATEGORIES)[:21]
+    for bad in [[], many, ["cs.XY"], ["foo"], ["cs"], ["cs.cv"], ["CS.CV"], [""], ["x" * 65]]:
+        assert client.put(url, json={"categories": bad}).status_code == 422, bad
+    r = client.put(url, json={"categories": ["cs.CV", "cs.XY"]})  # well formed, but no such
+    assert "cs.XY" in r.json()["detail"] and "cs.CV or hep-th" in r.json()["detail"]
+    assert client.get(url).json()["categories"] == web
+
+    r = client.delete(url)
+    assert r.status_code == 200 and r.json() == configured
+    harvested.clear()
+    assert list(ingest.sync_arxiv()) == ["cs.CV", "cs.RO"] == harvested
+
+    r = client.post("/api/admin/sync")
+    assert r.status_code == 202 and r.json() == {"job": "job-1"}
+
+
+def test_admin_venues(client, session, token, monkeypatch, capsys):
+    """An admin sees the conferences with the editions imported, and queues the others from a
+    year on as import-venues does, after a dry run that only estimates; nobody else can.
+    """
+    admin_token = _web_admin(session, client)
+    queued = []
+    job = SimpleNamespace(id="job-1")
+    monkeypatch.setattr(jobs, "enqueue_import", lambda *a, **k: queued.append((a, k)) or job)
+    year = date.today().year
+    iccv_held = config().venues["ICCV"].model_copy(update={"held_in": year})  # every 2 years
+    monkeypatch.setitem(config().venues, "ICCV", iccv_held)
+    with Session(engine()) as s, s.begin():
+        for imported in (year - 2, year - 4):
+            s.add(SyncState(source=f"venue:ICCV:{imported}", cursor=date.today()))
+    url, plan = "/api/admin/venues", {"venues": ["ICCV", "CVPR"], "since": year - 2}
+    for who, caller in _callers(token, admin_token).items():
+        expected = 401 if who == "nobody" else 403
+        assert caller.get(url).status_code == expected, who
+        dry = caller.post(f"{url}/import", json=plan | {"dry_run": True})
+        assert dry.status_code == expected, who
+
+    listed = client.get(url).json()
+    assert [v["name"] for v in listed] == list(config().venues)
+    cvpr, iccv = (config().venues[name].papers_per_edition for name in ("CVPR", "ICCV"))
+    found, years = next(v for v in listed if v["name"] == "ICCV"), [year - 2, year - 4]
+    assert found == {"name": "ICCV", "every": 2, "papers_per_edition": iccv, "years": years}
+    assert [v["years"] for v in listed if v["name"] != "ICCV"] == [[]] * (len(listed) - 1)
+
+    # config.yaml's order, newest first, without ICCV's imported edition and its year off
+    editions = [("CVPR", year), ("ICCV", year), ("CVPR", year - 1), ("CVPR", year - 2)]
+    papers = 3 * cvpr + iccv
+    r = client.post(f"{url}/import", json=plan | {"dry_run": True})
+    as_json = [list(edition) for edition in editions]
+    expected = {"editions": as_json, "papers": papers, "tokens": papers * 1000, "queued": False}
+    assert r.status_code == 200 and r.json() == expected and not queued
+    r = client.post(f"{url}/import", json=plan | {"briefs": False})
+    assert r.json() == expected | {"tokens": 0, "queued": True}
+    assert queued == [(editions[0], {"briefs": False, "then": editions[1:]})]
+
+    queued.clear()
+    empty = {"editions": [], "papers": 0, "tokens": 0, "queued": False}
+    assert client.post(f"{url}/import", json={"venues": [], "since": year}).json() == empty
+    unknown = [{"venues": ["SIGGRAPH"]}, {"venues": ["iccv"]}]  # names as GET lists them
+    for bad in [*unknown, {"since": 1999}, {"since": year + 1}]:
+        assert client.post(f"{url}/import", json=plan | bad).status_code == 422, bad
+    assert not queued
+
+    # the command line plans and queues the same way
+    cli.import_venues(SimpleNamespace(venue=["cvpr"], since=year - 1, until=None, no_briefs=False))
+    assert queued == [(("CVPR", year), {"briefs": True, "then": [("CVPR", year - 1)]})]
+    assert "Queued 2 editions" in capsys.readouterr().out
 
 
 def test_create_user_command(session, monkeypatch, capsys):

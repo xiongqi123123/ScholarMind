@@ -102,6 +102,23 @@ def enqueue_import(
     )
 
 
+def import_venues(
+    since: int,
+    until: int,
+    names: list[str] | None = None,
+    briefs: bool = True,
+    dry_run: bool = False,
+):
+    """The editions of these venues (default: all) from `until` back to `since` not imported
+    yet (venues.editions), and the first job of their imports, queued one after another,
+    newest first; None if nothing was queued (nothing to import, or dry_run).
+    """
+    plan = venues.editions(since, until, names)
+    if not plan or dry_run:
+        return plan, None
+    return plan, enqueue_import(*plan[0], briefs=briefs, then=plan[1:])
+
+
 def venues_job() -> list[tuple[str, int]]:
     """Weekly: queue an import of every edition that is due (venues.due_editions)."""
     due = venues.due_editions()

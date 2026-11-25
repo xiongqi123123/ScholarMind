@@ -45,6 +45,7 @@ ARXIV_BATCH = 100  # IDs per arXiv API request
 # Pauses before attempts 2-5 of a request: the way out (the proxy) can be flaky for minutes.
 RETRY_PAUSES = (30, 60, 120, 240)
 MAX_RETRY_AFTER = 600  # seconds: the most a Retry-After is waited
+BRIEF_TOKENS = 1000  # a paper's brief, about: for estimates before an import
 
 ARXIV_LINK = re.compile(
     r"arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})|10\.48550/arxiv\.(\d{4}\.\d{4,5})"
@@ -519,16 +520,36 @@ def _fill_from_arxiv(name: str, year: int) -> int:
 
 def editions(since: int, until: int, names: list[str] | None = None) -> list[tuple[str, int]]:
     """(venue, year) for these venues (default: all) from `until` back to `since`, newest
-    first, without the editions already imported to the end. Years a venue skips (ICCV is held
-    in odd years only) are left in: their import finds nothing published and moves on.
+    first, without the editions already imported to the end, nor the years a venue is not held
+    (VenueConfig.held: ICCV is held in odd years only).
     """
     with Session(engine()) as session:
         done = set(
             session.scalars(select(SyncState.source).where(SyncState.source.like("venue:%")))
         )
     names = names or list(config().venues)
-    years = range(until, since - 1, -1)
-    return [(name, year) for year in years for name in names if f"venue:{name}:{year}" not in done]
+    return [
+        (name, year)
+        for year in range(until, since - 1, -1)
+        for name in names
+        if f"venue:{name}:{year}" not in done and config().venues[name].held(year)
+    ]
+
+
+def imported(session: Session) -> dict[str, list[int]]:
+    """The years of each venue's editions imported to the end, newest first."""
+    years = {}
+    for source in session.scalars(select(SyncState.source).where(SyncState.source.like("venue:%"))):
+        name, year = source.removeprefix("venue:").rsplit(":", 1)
+        years.setdefault(name, []).append(int(year))
+    return {name: sorted(found, reverse=True) for name, found in years.items()}
+
+
+def estimate(plan: list[tuple[str, int]]) -> int:
+    """Papers these editions bring, roughly: VenueConfig.papers_per_edition each, also for an
+    edition not published yet.
+    """
+    return sum(config().venues[name].papers_per_edition for name, _ in plan)
 
 
 def hold(name: str, year: int) -> int:

@@ -1,8 +1,9 @@
-"""What an admin changes about the agent on the web, kept in the settings table: the connection
+"""What an admin changes on the web, kept in the settings table: about the agent, the connection
 (the base URL with its API key, the key encrypted with a key derived from SECRET_KEY), the model
-names, and the prompts. Without a row the defaults hold: LLM_API_KEY, config.yaml's analysis
-section and the files in prompts/. Read at every use, never cached, so a change reaches the next
-job in every worker process.
+names and the prompts; besides, the arXiv categories to sync and whether the first-run setup is
+done. Without a row the defaults hold: LLM_API_KEY, config.yaml's analysis and arxiv sections
+and the files in prompts/. Read at every use, never cached, so a change reaches the next job in
+every worker process.
 """
 
 import base64
@@ -48,6 +49,9 @@ PLACEHOLDERS = {
     "chat": ("{{LANGUAGE}}",),
     "translate": ("{{LANGUAGE}}",),
 }
+ARXIV = "arxiv:categories"  # a JSON list
+MAX_CATEGORIES = 20
+SETUP_DONE = "setup:done"
 
 
 class MissingPlaceholders(ValueError):
@@ -277,3 +281,43 @@ def set_prompt(session: Session, key: str, text: str, admin: User):
 
 def reset_prompt(session: Session, key: str):
     session.execute(delete(Setting).where(Setting.key == f"prompt:{key}"))
+
+
+def arxiv_state(session: Session) -> dict:
+    """The arXiv categories the sync harvests: the web's if set, else config.yaml's."""
+    row = session.get(Setting, ARXIV)
+    if row is None:
+        return {"categories": config().arxiv.categories, "source": "config"}
+    return {"categories": json.loads(row.value), "source": "web"}
+
+
+def set_arxiv_categories(session: Session, categories: list[str], admin: User):
+    """InvalidSetting unless 1-MAX_CATEGORIES categories arXiv has (arxiv.CATEGORIES), each
+    stripped first and repeats dropped: one it does not have would stop every daily sync.
+    """
+    categories = list(dict.fromkeys(c.strip() for c in categories))
+    if not 1 <= len(categories) <= MAX_CATEGORIES:
+        raise InvalidSetting(f"Give 1-{MAX_CATEGORIES} arXiv categories")
+    if bad := [c for c in categories if c not in arxiv.CATEGORIES]:
+        raise InvalidSetting(
+            f"Not an arXiv category (like cs.CV or hep-th, see https://arxiv.org/category_taxonomy):"
+            f" {', '.join(bad)}"
+        )
+    _put(session, ARXIV, json.dumps(categories), admin)
+    log.info("%s set the arXiv categories to %s", admin.username, ", ".join(categories))
+
+
+def reset_arxiv_categories(session: Session, admin: User):
+    if session.execute(delete(Setting).where(Setting.key == ARXIV).returning(Setting.key)).first():
+        log.info(
+            "%s removed the arXiv categories set on the web; config.yaml's again", admin.username
+        )
+
+
+def setup_done(session: Session) -> bool:
+    return session.get(Setting, SETUP_DONE) is not None
+
+
+def finish_setup(session: Session, admin: User):
+    """Marks the first-run setup done, so the web app no longer leads admins through it."""
+    _put(session, SETUP_DONE, "", admin)

@@ -1,4 +1,5 @@
-import { Check } from 'lucide-react'
+import { Check, X } from 'lucide-react'
+import { Dialog } from 'radix-ui'
 import { useState, type FormEvent } from 'react'
 import { ApiError, send } from './api'
 
@@ -54,5 +55,28 @@ export default function PasswordForm() {
         </p>
       </div>
     </form>
+  )
+}
+
+/** The form in a dialog, without leaving the page: from the header menu and the welcome page. */
+export function PasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/30 data-[state=open]:animate-fade" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="popover fixed top-[42%] left-1/2 z-50 w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-6 data-[state=open]:animate-rise"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <Dialog.Title className="font-serif text-lg font-semibold text-ink">修改密码</Dialog.Title>
+            <Dialog.Close className="icon-btn -mr-2" aria-label="关闭">
+              <X size={16} strokeWidth={1.75} />
+            </Dialog.Close>
+          </div>
+          <PasswordForm />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

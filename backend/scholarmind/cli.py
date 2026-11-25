@@ -104,14 +104,14 @@ def import_venue(args):
 
 
 def import_venues(args):
-    from . import jobs, venues
+    from . import jobs
 
     names = [_venue(v) for v in args.venue]
-    plan = venues.editions(args.since, args.until or date.today().year, names)
+    until = args.until or date.today().year
+    plan, job = jobs.import_venues(args.since, until, names, not args.no_briefs)
     if not plan:
         print("Every edition asked for is imported already")
         return
-    job = jobs.enqueue_import(*plan[0], briefs=not args.no_briefs, then=plan[1:])
     print(f"Queued {len(plan)} editions on {jobs.FETCH}, one after another (job {job.id}):")
     print(", ".join(f"{name} {year}" for name, year in plan))
 

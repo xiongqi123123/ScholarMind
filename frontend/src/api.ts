@@ -415,6 +415,25 @@ export function useFacets(params: URLSearchParams | null) {
   return Array.isArray(data?.domain) ? data : undefined
 }
 
+/** /api/admin/arxiv: the arXiv categories synced every day, set here or the deployment's. */
+export interface Arxiv {
+  categories: string[]
+  source: 'web' | 'config'
+}
+
+/** The same categories, in any order. */
+export const sameCategories = (a: string[], b: string[]) => [...a].sort().join() === [...b].sort().join()
+
+/** Save the arXiv categories to sync; an error message if refused. */
+export async function saveArxiv(categories: string[]): Promise<string | undefined> {
+  try {
+    mutate('/admin/arxiv', await send<Arxiv>('PUT', '/admin/arxiv', { categories }))
+    invalidate('/admin/arxiv')
+  } catch (e) {
+    return e instanceof ApiError && e.status === 422 ? '类别要像 cs.CV、math.OC、hep-th 这样写，1 到 20 个' : (e as Error).message
+  }
+}
+
 export async function logout() {
   await fetch('/api/logout', { method: 'POST' }).catch(() => {})
   location.assign('/login') // full reload drops every cached response

@@ -246,3 +246,44 @@ export function MergeSpot({ className }: { className?: string }) {
     </Spot>
   )
 }
+
+/** What arXiv announced today (the daily page, the arXiv source): a sun coming up over the horizon. */
+export function SunriseSpot({ className }: { className?: string }) {
+  return (
+    <Spot id="spot-sunrise" className={className}>
+      <path className="fill-clay" d="M28 67C28 48 42 34 60 34C78 34 92 48 92 67Z" />
+      <path className="stroke-ink" strokeWidth="3.5" d="M10 69C44 64 78 72 110 66" />
+      <path className="stroke-ink" strokeWidth="2.5" d="M60 11L60 21M27 23L33 30M93 23L87 30M12 45L21 48M108 45L99 48" />
+      <path className="stroke-stone" strokeWidth="2" d="M30 84C48 81 72 82 90 85M42 98C54 96 66 96 78 98" />
+    </Spot>
+  )
+}
+
+/** Stars and notes: a star before a sage sun, a couple of written lines beside it. */
+export function StarSpot({ className }: { className?: string }) {
+  return (
+    <Spot id="spot-star" className={className}>
+      <path className="fill-sage" d="M80 14C95 14 106 26 106 40C106 55 94 66 80 66C65 66 54 54 54 40C54 25 66 14 80 14Z" />
+      <path
+        className="fill-paper-raised stroke-ink"
+        strokeWidth="3"
+        d="M50 26L59 48L83 50L65 66L71 90L50 77L29 90L35 66L17 50L41 48Z"
+      />
+      <path className="stroke-stone" strokeWidth="2" d="M76 92C86 90 96 91 106 93M82 102C90 101 98 101 106 102" />
+      <circle cx="102" cy="76" r="2.4" className="fill-ink" />
+    </Spot>
+  )
+}
+
+/** Where papers come from (the sources page): sheets coming down onto a pile before a warm sun. */
+export function StackSpot({ className }: { className?: string }) {
+  return (
+    <Spot id="spot-stack" className={className}>
+      <path className="fill-clay" d="M40 12C56 12 68 24 68 40C68 55 56 66 40 66C25 66 13 55 13 40C13 24 25 12 40 12Z" />
+      <path className="fill-paper-raised stroke-ink" strokeWidth="2.5" d="M46 48L98 42L102 88L50 94Z" />
+      <path className="fill-paper-raised stroke-ink" strokeWidth="3" d="M30 58L84 54L86 102L32 106Z" />
+      <path className="stroke-stone" strokeWidth="2" d="M42 70C54 69 64 68 74 68M42 80C54 79 64 78 74 78M42 90C50 89 56 89 62 89" />
+      <path className="stroke-ink" strokeWidth="3" d="M98 10L98 32M90 25L98 33L106 25" />
+    </Spot>
+  )
+}
