@@ -5,13 +5,15 @@
   </picture>
 </p>
 
+<p align="center"><b>中文</b> · <a href="README.en.md">English</a></p>
+
 <p align="center">
   <b>课题组自己的论文库：自动收论文、打标签、写解读，人和 AI Agent 用同一份数据</b>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
-  <a href="https://github.com/xiongqi123123/ScholarMind/releases"><img src="https://img.shields.io/badge/version-0.1.0-c8794e" alt="Version"></a>
+  <a href="https://github.com/xiongqi123123/ScholarMind/releases"><img src="https://img.shields.io/badge/version-0.2.0-c8794e" alt="Version"></a>
   <img src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React">
@@ -158,12 +160,45 @@ flowchart LR
 
 ## 快速开始
 
-需要你自己准备 PostgreSQL、Redis 和一个 OpenAI 兼容的模型接口。我们在 PostgreSQL 17 和 Redis 8 上运行，没有用到数据库扩展。
+需要一台装了 Docker 和 Compose 插件（`docker compose`）的机器，以及一个 OpenAI 兼容的模型接口。PostgreSQL 17 和 Redis 8 由 compose 一起启动。
 
 ```bash
 git clone https://github.com/xiongqi123123/ScholarMind.git && cd ScholarMind
-cp .env.example .env                 # 数据库和 Redis 连接、SECRET_KEY、LLM_API_KEY
-cp config.example.yaml config.yaml   # 同步时间、模型接口地址和模型名
+cp .env.example .env                 # 两个密码、SECRET_KEY、LLM_API_KEY
+cp config.example.yaml config.yaml   # 模型接口地址和模型名、同步时间
+docker compose up -d
+```
+
+第一次启动要先构建镜像，需要几分钟；之后依次起 PostgreSQL 和 Redis、建表、启动服务。`docker compose up -d` 报错时用 `docker compose logs` 看原因。
+
+打开 `http://<主机>:8000`，先建第一个管理员账号，然后跟着初始化向导走完：连上模型接口，选 arXiv 类别，选要导入的顶会和起始年份（会给出预计篇数和打标签的 token），最后开始同步。之后每天到 `config.yaml` 里 `sync.cron` 的时间，会自动同步 arXiv 并给新论文打标签。
+
+库里还没有任何账号时，谁打开这个页面都能建第一个管理员，所以容器起来后尽快建好。
+
+更新到新版本：`git pull && docker compose up -d --build`，建表的迁移会在新的服务启动前自动跑。
+
+<details>
+<summary><b>也可以用命令行</b></summary>
+
+```bash
+docker compose exec app scholarmind create-user alice --admin   # 建管理员（会提示输入密码）
+docker compose exec app scholarmind sync                        # 现在就同步一次 arXiv
+docker compose exec app scholarmind import-venue CVPR 2026      # 导入一届会议
+docker compose exec app scholarmind import-venues --since 2022  # 排队导入 2022 年起的各届
+```
+
+用 `docker run` 部署的，把 `docker compose exec app` 换成 `docker exec -it scholarmind`。
+
+</details>
+
+<details>
+<summary><b>另一种方式：自备 PostgreSQL 和 Redis，用 docker run</b></summary>
+
+已经有 PostgreSQL 和 Redis 时，可以只跑应用这一个容器。我们在 PostgreSQL 17 和 Redis 8 上运行，没有用到数据库扩展；`DATABASE_URL` 里的库和账号、`REDIS_URL` 里的 Redis 库要先建好。
+
+```bash
+cp .env.example .env                 # 取消 DATABASE_URL、REDIS_URL 的注释并填好，再填 SECRET_KEY、LLM_API_KEY
+cp config.example.yaml config.yaml
 
 docker build -t scholarmind .
 
@@ -176,29 +211,19 @@ docker run -d --name scholarmind --restart always -p 8000:8000 \
   scholarmind
 ```
 
-打开 `http://<主机>:8000`，先建第一个管理员账号，然后跟着初始化向导走完：连上模型接口，选 arXiv 类别，选要导入的顶会和起始年份（会给出预计篇数和打标签的 token），最后开始同步。之后每天到 `config.yaml` 里 `sync.cron` 的时间，会自动同步 arXiv 并给新论文打标签。
-
-库里还没有任何账号时，谁打开这个页面都能建第一个管理员，所以容器起来后尽快建好。
-
-<details>
-<summary><b>也可以用命令行</b></summary>
-
-```bash
-docker exec -it scholarmind scholarmind create-user alice --admin  # 建管理员（会提示输入密码）
-docker exec scholarmind scholarmind sync                           # 现在就同步一次 arXiv
-docker exec scholarmind scholarmind import-venue CVPR 2026         # 导入一届会议
-docker exec scholarmind scholarmind import-venues --since 2022     # 排队导入 2022 年起的各届
-```
+国内构建时给 `docker build` 加镜像源的写法见 [Dockerfile](Dockerfile) 开头。更新时同样是先构建、建表，再换掉容器。
 
 </details>
 
 <details>
 <summary><b>部署时要知道的几件事</b></summary>
 
-- 国内构建可以给 `docker build` 加镜像源，写法见 [Dockerfile](Dockerfile) 开头；访问 arXiv 需要代理时在 `.env` 里设 `HTTPS_PROXY`。
+- 国内构建：在 `.env` 里把 `PIP_INDEXES`、`NPM_REGISTRIES` 设成国内镜像源，示例在 [.env.example](.env.example) 里；拉 `node`、`python`、`postgres`、`redis` 这几个基础镜像走的是 Docker 守护进程自己的镜像加速或代理设置。访问 arXiv 需要代理时在 `.env` 里设 `HTTPS_PROXY`，compose 构建镜像时 pip 和 npm 也会用它。
 - 通过 HTTPS 提供服务时把 `.env` 里的 `COOKIE_SECURE` 设为 `true`，前面放任意反向代理即可。问答是流式输出（SSE），反向代理不要缓冲响应。
 - 内存：api 约 60 MB，每个 analyze worker 工作时约 150 MB，写解读时约 400 MB。`ANALYZE_WORKERS` 按机器内存和模型接口允许的并发定；接口限流时任务会自己等待。
-- 仓库里目前没有 docker compose 文件。想让 CI 在检查通过后自动部署到一台 Docker 主机（构建、迁移、切换、失败回滚），脚本和说明在 [deploy/](deploy/README.md)。
+- compose 里 `ANALYZE_WORKERS` 默认 2，`TZ` 默认 `Asia/Shanghai`（`sync.cron` 等定时任务按它的时区算），都在 `.env` 里改。
+- 数据在 Docker 卷 `scholarmind_postgres` 里，Redis 只是队列。`docker compose down` 不删数据，加 `-v` 会连数据库一起删掉。备份：`docker compose exec -T postgres pg_dump -U scholarmind scholarmind > scholarmind.sql`。
+- 想让 CI 在检查通过后自动部署到一台 Docker 主机（构建、迁移、切换、失败回滚），脚本和说明在 [deploy/](deploy/README.md)。
 - 这个服务按内网使用设计：没有注册入口，账号由管理员创建，除了建第一个管理员（只在一个账号都没有时开放），所有接口都要登录或令牌。放到公网前请自己评估。
 
 </details>
@@ -281,7 +306,7 @@ claude mcp add --transport http scholarmind https://<你的域名>/mcp \
 ```bash
 conda create -n ScholarMind python=3.12 -y
 conda run -n ScholarMind pip install -e "backend[dev]"
-cp .env.example .env
+cp .env.example .env                 # 取消 DATABASE_URL、REDIS_URL 的注释，指向你的库
 cp config.example.yaml config.yaml
 
 cd backend
@@ -301,7 +326,7 @@ conda run -n ScholarMind uvicorn scholarmind.api:app --reload
 
 ## 现状与路线图
 
-这是 0.1.0，第一个可用的版本，在一个十来人的课题组里日常运行，库里约十万篇论文。已知的限制：
+这是 0.2.0，在第一个可用的版本 0.1.0 之上加了网页上的初始化向导和 docker compose 部署。它在一个十来人的课题组里日常运行，库里约十万篇论文。已知的限制：
 
 - 界面只有中文；模型输出的语言可以在 `analysis.language` 里改，但提示词和检查规则是按中文写的。
 - ICRA、IROS、ACM MM 等不开放 PDF 的会议，只有在 arXiv 上有对应版本的论文能写解读。

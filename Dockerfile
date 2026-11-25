@@ -1,6 +1,7 @@
 # ScholarMind image: one container runs everything (deploy/run.sh): the api with the frontend
 # (port 8000), the cron scheduler, one fetch worker and ANALYZE_WORKERS analyze workers, which
-# call pi. Build from the repository root:
+# call pi. compose.yaml builds it and runs it with PostgreSQL and Redis (`docker compose up -d`,
+# the mirrors and proxy below set in .env). To build by hand, from the repository root:
 #
 #   docker build --build-arg PIP_INDEXES=https://pypi.tuna.tsinghua.edu.cn/simple,https://pypi.org/simple \
 #     --build-arg NPM_REGISTRIES=https://registry.npmmirror.com,https://registry.npmjs.org -t scholarmind .

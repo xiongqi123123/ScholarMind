@@ -1,0 +1,82 @@
+# ScholarMind with PostgreSQL and Redis: `docker compose up -d` builds the image, starts the
+# database and Redis, runs the migrations, then starts the app on port 8000. Everything to set
+# is in .env (from .env.example); config.yaml (from config.example.yaml) is mounted read-only.
+# After `git pull`: `docker compose up -d --build`; the migrations run again before the app.
+name: scholarmind
+
+x-app: &app
+  build:
+    context: .
+    args:
+      PIP_INDEXES: ${PIP_INDEXES:-https://pypi.org/simple}
+      NPM_REGISTRIES: ${NPM_REGISTRIES:-https://registry.npmjs.org}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-}
+  # No image name: with one, compose first tries to pull it from Docker Hub.
+  env_file: .env
+  environment:
+    # Built from the passwords in .env; these override DATABASE_URL and REDIS_URL there.
+    DATABASE_URL: postgresql://scholarmind:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/scholarmind
+    REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}@redis:6379/0
+    ANALYZE_WORKERS: ${ANALYZE_WORKERS:-2}
+    TZ: ${TZ:-Asia/Shanghai}
+  volumes:
+    # Long syntax: a missing config.yaml is an error, not an empty directory made in its place.
+    - type: bind
+      source: ./config.yaml
+      target: /app/config.yaml
+      read_only: true
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: scholarmind
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: scholarmind
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    # Over TCP: the server the image runs while it initializes listens on the socket only.
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "scholarmind", "-d", "scholarmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:8
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  postgres:
+  redis:
